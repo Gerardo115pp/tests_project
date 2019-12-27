@@ -21,7 +21,7 @@ class LoginPage extends Component
         }
         else if (password_input.value==='')
         {
-            alert('contrasena de usuario requerida');
+            alert('contraseña de usuario requerida');
             return;
         }
 
@@ -54,7 +54,7 @@ class LoginPage extends Component
             forma.append('user_name',user_name);
             forma.append('token',user_token);
 
-            const request = new Request('http://ehonsar.000webhostapp.com/php/validateUserToken.php',{method:'POST',body: forma});
+            const request = new Request('http://localhost:5000/validateUserToken',{method:'POST',body: forma});
             fetch(request)
                 .then(promise => promise.json())
                 .then(response => {
