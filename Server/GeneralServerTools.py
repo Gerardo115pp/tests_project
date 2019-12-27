@@ -1,3 +1,5 @@
+from mysql.connector import connect as mysql
+
 class Sha1:
 
     def __init__(self):
@@ -123,3 +125,18 @@ class Sha1:
     def mover(self, N, B):
 
         return ((N << B) | (N >> (32 - B))) & 0xffffffff
+
+def getConnection(credentials):
+    if "database" not in credentials:
+        return mysql(
+            host=credentials["host"],
+            user=credentials["user"],
+            password=credentials["password"]
+        )
+    else:
+        return mysql(
+            host=credentials["host"],
+            user=credentials["user"],
+            password=credentials["password"],
+            database=credentials["database"]
+        )
