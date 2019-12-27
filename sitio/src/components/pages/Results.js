@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import * as userActions from '../../actions/userActions';
 import ResultBox from '../ResultBox';
 import ResultsSideBar from '../ResultsSideBar';
 import historial from '../historial';
+import * as userActions from '../../actions/userActions';
+import * as serverInfo from '../../serverInfo';
 import '../../css/Results.css';
 
 class Results extends Component
@@ -30,7 +31,7 @@ class Results extends Component
         const forma = new FormData();
         forma.append('id',user_id);
 
-        const request = new Request('http://ehonsar.000webhostapp.com/php/getInterviews.php',{method: 'POST',body:forma});
+        const request = new Request(`${serverInfo.server_name}getInterviews`,{method: 'POST',body:forma});
         fetch(request)
             .then(promise => promise.json())
             .then(response => {
@@ -52,7 +53,7 @@ class Results extends Component
         const forma = new FormData();
         forma.append('id',id);
 
-        const request = new Request('http://ehonsar.000webhostapp.com/php/deleteInterviewee.php',{method: 'POST',body: forma});
+        const request = new Request(`${serverInfo.server_name}deleteInterviewee`,{method: 'POST',body: forma});
         fetch(request);
     }
 

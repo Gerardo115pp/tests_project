@@ -1,5 +1,6 @@
 import React,{Component} from 'react';
 import { connect } from 'react-redux'
+import * as serverInfo from '../../serverInfo';
 import * as userActions from '../../actions/userActions';
 import '../../css/login.css';
 import historial from '../historial';
@@ -30,7 +31,7 @@ class LoginPage extends Component
         forma.append('user_name',name);
         forma.append('password',password_input.value);
 
-        const request = new Request('http://ehonsar.000webhostapp.com/php/loginUsers.php',{method: 'POST',body: forma});
+        const request = new Request(`${serverInfo.server_name}loginUsers`,{method: 'POST',body: forma});
         fetch(request)
             .then(promise => promise.json())
             .then(response => {
@@ -54,7 +55,7 @@ class LoginPage extends Component
             forma.append('user_name',user_name);
             forma.append('token',user_token);
 
-            const request = new Request('http://localhost:5000/validateUserToken',{method:'POST',body: forma});
+            const request = new Request(`${serverInfo.server_name}validateUserToken`,{method:'POST',body: forma});
             fetch(request)
                 .then(promise => promise.json())
                 .then(response => {

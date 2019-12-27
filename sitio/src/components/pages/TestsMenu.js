@@ -5,6 +5,7 @@ import ModalTests from '../ModalTests';
 import historial from '../historial';
 import * as intervieweeActions from '../../actions/intervieweeActions';
 import { isBlock } from '@babel/types';
+import { server_name } from '../../serverInfo';
 
 class TestMenu extends Component
 {
@@ -46,7 +47,7 @@ class TestMenu extends Component
         forma.append('name',document.getElementById('nombre-input').value);
         forma.append('needed',JSON.stringify(list_needed_tests));
         forma.append('user_id', this.props.user.user_id);
-        let request = new Request('http://ehonsar.000webhostapp.com/php/createNewInterview.php',{method: 'POST',body:forma});
+        let request = new Request(`${server_name}createNewInterview`,{method: 'POST',body:forma});
         const namer_tag = document.getElementById('nombre-input').value;
         await fetch(request)
                 .then(promise => promise.json())

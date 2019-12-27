@@ -38,6 +38,23 @@ def deleteInterviewee():
     if request.method == 'POST':
         return user_data_getter.deleteIntervieweeById(request.form['id'])
 
+@app.route('/getTests')
+def getTests():
+    if os.path.exists('operational_data/testDictyonary.json'):
+        with open('operational_data/testDictyonary.json', 'r') as f:
+            response  = json.load(f)
+        return response
+
+@app.route('/createNewInterview', methods=['POST'])
+def createNewInterview():
+    if request.method == 'POST':
+        tests = json.loads(request.form["needed"])
+        return user_data_getter.createInterview(request.form["name"],tests,request.form["user_id"])
+
+@app.route('/handleResults',  methods=['POST'])
+def handleResults():
+    if request.method == 'POST':
+        return user_data_getter.updateResults(request.form["key"],json.loads(request.form["results"]))
 
 if __name__ == "__main__":
     app.run(debug=True)

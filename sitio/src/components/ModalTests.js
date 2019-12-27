@@ -1,4 +1,5 @@
 import React,{ Component } from 'react';
+import * as serverInfo from '../serverInfo';
 import '../css/Modal.css' ;
 
 class ModalTests extends Component
@@ -10,7 +11,7 @@ class ModalTests extends Component
 
     async UNSAFE_componentWillMount()
     {
-        const request = new Request("http://ehonsar.000webhostapp.com/php/getTests.php");
+        const request = new Request(`${serverInfo.server_name}getTests`);
         if(this.state.tests.length === 0)
         {
             await fetch(request)

@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import Test from '../../classes/Test';
 import historial from '../historial';
 import * as intervieweeActions from '../../actions/intervieweeActions';
+import { server_name } from '../../serverInfo';
 import '../../css/Interviewer.css';
 
 class Interviews extends Component {
@@ -188,7 +189,7 @@ class Interviews extends Component {
         let forma = new FormData();
         forma.append('key',this.props.interviewee_key);
         forma.append('results',JSON.stringify(this.interviewee_stats));
-        const request = new Request('http://ehonsar.000webhostapp.com/php/handleResults.php',{method: 'POST',body: forma});
+        const request = new Request(`${server_name}handleResults`,{method: 'POST',body: forma});
         await fetch(request)
             .then(promise => promise.json())
             .then(response => {
