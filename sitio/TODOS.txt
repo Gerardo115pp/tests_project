@@ -1,0 +1,6 @@
+[M][3] hacer que el programa le de la opcion al usuario de que continue con el un test que dejo a meidas
+
+[S][2] hacer que el programa no pierda los resultados del test en progreso cuando se recarga la pagina
+
+[S][1] añadir en el side bar de resultados, un boton que permita al usuario aplicar un o varios tests extras
+a un paciente

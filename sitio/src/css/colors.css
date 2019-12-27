@@ -1,0 +1,11 @@
+:root{
+    --light-grey: rgb(241, 241, 241);
+    --grey: rgb(130,130,130);
+    --dark-grey: rgb(44, 44, 44);
+    --cyan: rgb(0, 247, 255);
+    --ligth-cyan: rgb(180, 252, 255);
+    --cyan-clicked: rgb(12, 176, 182);
+    --sub-section: rgb(3, 227, 235);
+    --background-color: rgb(10, 86, 131);
+    --danger: rgb(226, 69, 69);
+}

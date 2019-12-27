@@ -1,0 +1,180 @@
+/*
+ 
+   ____                 _ _       
+  |  _ \ ___  ___ _   _| | |_ ___ 
+  | |_) / _ \/ __| | | | | __/ __|
+  |  _ <  __/\__ \ |_| | | |_\__ \
+  |_| \_\___||___/\__,_|_|\__|___/
+                                  
+ 
+*/
+
+@import url('login.css');
+@import url("colors.css");
+
+
+/*=============================================
+=            Header            =
+=============================================*/
+
+header#results-header{
+    font-family: 'Blinker';
+    background-color: var(--background-color);
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5rem;
+    color: white;
+    text-transform: uppercase;
+    padding: 0.3rem;
+}
+
+.page-title{
+    margin-left: 35%;
+}
+
+#back-arrow.white-element{
+    display: flex;
+    margin-right: 2%;
+    justify-content: center;
+    align-items: center;
+}
+
+/*=============================================
+=            Results            =
+=============================================*/
+
+#results-area{
+    display: flex;
+    flex-wrap: wrap;
+    width: 90%;
+    margin: 0 auto;
+}
+
+.interview-results-container{
+    cursor: pointer;
+    font-family: 'Roboto Condensed';
+    width: 25%;
+    height: 8em;
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    border: 1px solid var(--grey);
+    margin: 3%;
+    padding: 1%;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: all .3s ease;
+}
+
+.interview-results-container:hover{
+    transform: scale(1.1);
+    border: 1px solid #fe4918;
+    box-shadow: 0 4px 28px 0 rgba(0, 0, 0, 0.349);
+}
+
+.interviewee-name-container{
+    display: flex;
+    width: 90%;
+    margin: 0 auto;
+    justify-content: space-between;
+}
+
+
+/*=============================================
+=            contros            =
+=============================================*/
+
+.interviewee-name-container .controls-container{
+    width: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 1.7rem;
+    color: var(--grey);
+    margin-left: 3%;
+}
+
+.interviewee-name-container .controls-container .cross:hover{
+    color: var(--danger);
+}
+
+.interviewee-name-container .controls-container i:hover{
+    color: var(--cyan);
+    cursor: pointer;
+}
+
+/*=====  End of contros  ======*/
+
+.interviewee-name-text{
+    font-family: 'Blinker';
+    font-size: 1.5rem;
+    color: var(--dark-grey);
+}
+
+
+/*=============================================
+=            Sidebar            =
+=============================================*/
+
+#results-side-bar{
+    overflow-x: hidden; 
+    background-color: rgb(241, 241, 241);
+    height: 100%; 
+    width: 0; 
+    position: fixed; 
+    z-index: 1; 
+    top: 0; 
+    right: 0;
+    /* border-left: 1px solid var(--cyan); */
+    padding-top: 60px; 
+    box-shadow: -4px 0 30px 0 rgba(0, 0, 0, 0.349);
+    transition: 0.5s; 
+}
+
+#results-side-bar-title{
+    font-family: "Roboto Condensed";
+    display: flex;
+    width: 80%;
+    justify-content: space-between;
+    font-size: 2rem;
+    border: 1px solid var;
+    margin: 0 auto;
+}
+
+span.results-title-text{
+    color: var(--background-color);
+}
+
+#close-sidebar-btn{
+    cursor: pointer;
+    color: var(--grey);
+    transition: all 0.3s ease-in-out;
+}
+
+#close-sidebar-btn:hover{
+    color: var(--danger)
+}
+
+
+/*----------  Stats  ----------*/
+
+#results-stats-container{
+    height: 70%;
+    overflow-y: auto;
+    font-family: "Blinker";
+    font-size: 1.2rem;
+    color: var(--dark-grey);
+    border-top: 2px solid var(--dark-grey);
+    margin-top: 7%;
+    padding: 5% 0 0 13%;
+}
+
+.results-attrib-container{
+    margin-bottom: 2%;
+}
+
+span.attrib-text-num{
+    color: var(--cyan-clicked)
+}
+
+
+

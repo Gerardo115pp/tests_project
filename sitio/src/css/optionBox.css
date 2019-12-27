@@ -1,0 +1,68 @@
+:root{
+    --grey: rgb(130,130,130);
+    --cyan: rgb(0, 247, 255);
+    --cyan-clicked: rgb(12, 176, 182);
+}
+
+.option-box-container{
+    cursor: pointer;
+    color: var(--grey);
+    width: 15%;
+    border: 3px solid var(--grey);
+    border-radius: 9px;
+    padding: 3% 0;
+    margin: 0 2%;
+    transition: all 0.3s ease-in-out;
+}
+
+.option-box-container:hover{
+    color: rgb(255,255,255);
+    background-color: var(--cyan);
+    border-color: var(--cyan)
+}
+
+.option-box-container:active{
+    background-color: var(--cyan-clicked);
+    border-color: var(--cyan-clicked);
+}
+
+.box-content{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    margin:0 auto
+}
+
+.box-logo{
+    font-size: 3.4rem;
+}
+
+.box-text{
+    font-family: 'Roboto Condensed';
+    font-size: 1.2rem;
+    margin:10% 0 0;
+}
+
+/*
+ 
+                     _                 
+   _ __   ___       (_)_ __ ___   __ _ 
+  | '_ \ / _ \ _____| | '_ ` _ \ / _` |
+  | | | | (_) |_____| | | | | | | (_| |
+  |_| |_|\___/      |_|_| |_| |_|\__, |
+                                 |___/ 
+ 
+*/
+
+.option-box-container.no-img{
+    height: 7rem
+}  
+
+.box-content.no-img{
+    width: 80%;
+    display: flex;
+    align-items: center;
+    margin: 10% auto;
+}

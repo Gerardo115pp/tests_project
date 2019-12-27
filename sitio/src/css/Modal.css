@@ -1,0 +1,64 @@
+:root{
+    --light-grey: rgb(219, 219, 219);
+    --grey: rgb(130,130,130);
+    --dark-grey: rgb(44, 44, 44);
+    --cyan: rgb(0, 247, 255);
+    --ligth-cyan: rgb(180, 252, 255);
+    --cyan-clicked: rgb(12, 176, 182);
+    --sub-section: rgb(3, 227, 235);
+}
+
+li {
+    list-style: none;
+}
+
+.modal-background{
+    display:none;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0,0,0,0.6);
+	margin: 0 auto;
+	z-index: 9999;
+	transition: all 0.4s ease-in-out;
+}
+
+#tests-modal{
+    width: 40%; 
+	background-color: #fefefe;
+	border: 2px solid #888;
+	border-radius: 40px;
+	margin: 5% auto 15% auto; 
+	padding: 3%;
+}
+
+.modal-title{
+    font-family: 'Blinker';
+    text-align: center
+}
+
+#tests-list{
+    width: 80%;
+	height: 50vh;
+	text-align: center;
+	margin: 0 auto;
+	overflow:auto;
+	border-bottom: 2px solid var(--grey);
+}
+
+.test-option{
+	cursor: pointer;
+    font-family: 'Roboto Condensed';
+    color:rgb(90,90,90);
+	padding: 3% 0;
+	border-bottom: 2px solid var(--cyan);
+}
+
+#modal-close-btn {
+	padding: 3%;
+	margin: 4% auto 0;
+}
+
+.test-option:hover{
+	background-color: var(--ligth-cyan);
+}

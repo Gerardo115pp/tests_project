@@ -1,0 +1,86 @@
+
+
+
+/*=============================================
+=            general classes            =
+=============================================*/
+
+
+.white-element{
+    color: white;
+}
+
+#back-arrow.white-element{
+    padding: auto 0;
+    color: white;
+}
+
+
+/*=====  End of general classes  ======*/
+
+
+
+@import url('colors.css');
+
+img[alt="www.000webhost.com"]{
+	display: none;
+}
+
+body{
+    margin: 0;
+}
+
+#login-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 35%;
+    margin: 15% auto;
+}
+
+#user-img-container{
+    font-size: 6rem;
+    color: rgb(153, 153, 183);
+    background-color: rgb(199, 199, 199);
+    padding: 3% 4%;
+    margin-bottom: 3%;
+    border: 3px solid rgb(43, 43, 43);
+    border-radius: 9999px;
+}
+
+#fields-container{
+    width: 70%
+}
+
+.field-container{
+    font-family: 'Blinker', sans-serif;
+    font-size: 1.3rem;
+    margin: 3%;
+}
+
+.field-container label{
+    box-sizing: border-box;
+    padding-left: 4%;
+}
+
+.field-container input{
+    display: block;
+    width: 100%;
+    background-color: rgb(196, 196, 196);
+    border: 2px solid rgb(43, 43, 43);
+    border-radius: 9999px;
+    padding: 2%;
+    margin-top: 1%
+}
+
+input#login-btn{
+    cursor: pointer;
+    font-family: 'Roboto Condensed';
+    width: 25%;
+    background-color: var(--cyan);
+    color: white;
+    margin: 6% auto;
+    border-color: var(--cyan);
+
+}

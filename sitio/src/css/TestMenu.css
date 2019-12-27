@@ -1,0 +1,124 @@
+:root{
+    --grey: rgb(130,130,130);
+    --cyan: rgb(0, 247, 255);
+    --cyan-clicked: rgb(12, 176, 182);
+    --sub-section: rgb(3, 227, 235);
+}
+
+/*
+ 
+                                   _ 
+    __ _  ___ _ __   ___ _ __ __ _| |
+   / _` |/ _ \ '_ \ / _ \ '__/ _` | |
+  | (_| |  __/ | | |  __/ | | (_| | |
+   \__, |\___|_| |_|\___|_|  \__,_|_|
+   |___/                             
+ 
+*/
+
+
+#main-container{
+    margin-top: 1%;
+}
+
+#options-page.non-vertical{
+    height:100vh;
+    display: flex;
+    align-items: flex-start;
+    margin-top: 5%;
+    justify-content: center;
+}
+#back-arrow{
+    cursor: pointer;
+    font-size: 3rem;
+    margin: 1%;
+    color: var(--grey);
+    transition: all 0.3s ease-in-out;
+}
+
+#back-arrow:hover{
+    color: var(--cyan)
+}
+
+
+/*=============================================
+=            Form container            =
+=============================================*/
+
+#form-title-container{
+    font-family: 'Blinker';
+    width: 90%;
+    font-size:1.6rem;
+    text-align: center;
+    /* margin-bottom: 20% */
+}
+
+#form-options-container{
+    font-family: 'Roboto Condensed';
+    width: 80%;
+}
+
+
+
+/*=============================================
+=            Fieldset inputs            =
+=============================================*/
+
+
+fieldset#inputs-container{
+    width: 40%;
+    margin: 0 auto;
+    border: none
+}
+
+.form-input-container label{
+    font-size: 1.5rem;
+    color: var(--sub-section);
+}
+
+.form-input-container input,.form-input-container select{
+    display: block;
+    width: 70%;
+    border-radius: 5px;
+    border: 3px solid var(--grey);
+    font-size: 1.3rem;
+    margin: 0 0 3% 3%;
+
+}
+
+
+/*----------  ok btn  ----------*/
+
+#ok-btn-container{
+    width: 90%
+}
+
+#test-menu-ok-btn{
+    cursor: pointer;
+    font-family: 'Roboto Condensed';
+    display: block;
+    width: 15%;
+    background-color: var(--sub-section);
+    color: white;
+    margin: 0 auto;
+    padding: 1%;
+    border-radius: 5px;
+    border: none;
+}
+
+
+
+/*----------  General Boton  ----------*/
+
+.boton{
+    cursor: pointer;
+    font-family: 'Roboto Condensed';
+    font-size: 1.2rem;
+    display: block;
+    width: 15%;
+    background-color: var(--sub-section);
+    color: white;
+    padding: 1%;
+    border-radius: 5px;
+    border: none
+}
