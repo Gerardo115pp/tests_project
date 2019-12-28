@@ -1,9 +1,10 @@
-export const setInterviewee = (tests,name,key) => {
+export const setInterviewee = (tests,name,key,interview) => {
     return {
         type: 'set_interviewee',
         tests: tests,
         name: name,
-        key: key
+        key: key,
+        interview_key: interview
     }
 }
 

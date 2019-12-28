@@ -57,14 +57,14 @@ class Results extends Component
         fetch(request);
     }
 
-    deleteResult = id => {
+    deleteResult = (id, interviewee_key) => {
         let { interviews } = this.state;
         delete interviews[id];
         this.setState({
             interviews: interviews
         })
-        this.deleteResultFromDB(id);
-    }
+        this.deleteResultFromDB(interviewee_key);
+    }   
 
     renderResultsAsJsx = () => {
         const results_array = [];

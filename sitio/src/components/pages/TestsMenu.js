@@ -54,7 +54,7 @@ class TestMenu extends Component
                 .then(result => {
                     if(!result.error)
                     {
-                        this.props.setInterviewee(result.tests,namer_tag,result.interviewee_key);
+                        this.props.setInterviewee(result.tests,namer_tag,result.interviewee_key,result.interview_key);
                         historial.push('/interviews');
                     }
                 })

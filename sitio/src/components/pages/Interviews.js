@@ -187,7 +187,7 @@ class Interviews extends Component {
 
     sendStats = async () => {
         let forma = new FormData();
-        forma.append('key',this.props.interviewee_key);
+        forma.append('key',this.props.interview_key);
         forma.append('results',JSON.stringify(this.interviewee_stats));
         const request = new Request(`${server_name}handleResults`,{method: 'POST',body: forma});
         await fetch(request)
@@ -199,7 +199,7 @@ class Interviews extends Component {
                 }
                 else 
                 {
-                    alert('there was an error');
+                    alert(response.msg);
                 }
             })
     }

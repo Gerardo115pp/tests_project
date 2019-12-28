@@ -1,4 +1,5 @@
 from mysql.connector import connect as mysql
+import os, json
 
 class Sha1:
 
@@ -140,3 +141,49 @@ def getConnection(credentials):
             password=credentials["password"],
             database=credentials["database"]
         )
+    
+def getCredentials(db=None):
+    with open('mysql/mysql_credential.json', 'r') as f:
+        credentials = json.load(f)
+    if db:
+        credentials['database'] = db
+    return credentials
+        
+def insertTestsFromJson(td_path='operational_data/testDictyonary.json', tl_path='operational_data/testLocations.json'):
+    if os.path.exists(td_path) and os.path.exists(tl_path):
+        with open(td_path, 'r') as f:
+            td = json.load(f)
+        with open(tl_path, 'r') as f:
+            tl = json.load(f)
+
+        conn = getConnection(getCredentials('interviews'))
+        cursor = conn.cursor()
+        try:
+            for test in td.keys():
+                
+                test_path = tl[td[test]]
+                if os.path.exists(test_path):
+                    with open(test_path, 'r') as f:
+                        tmp = json.load(f)
+                else:
+                    print(f"Missing '{test_path}'...")
+                    continue
+                
+                length = len(tmp['questions']) if 'questions' in tmp.keys() else len(tmp[list(tmp.keys())[0]]['questions'])
+
+                sql = f"INSERT INTO tests(id,short_name,full_name,length,path) VALUES (NULL, '{td[test]}', '{test}', {length}, '{test_path}');"
+                print(f"executing: {sql}")
+                cursor.execute(sql)
+                conn.commit()
+        except Exception as e:
+            raise e
+        
+        finally:
+            conn.close()
+
+
+
+
+
+
+

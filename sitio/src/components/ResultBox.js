@@ -21,7 +21,7 @@ class ResultBox extends Component
             <div className="interviewee-name-container">
                 <h4 className="interviewee-name-text">{interview['name']}</h4>
                 <div className='controls-container'>
-                    <i onClick={() => {this.props.callback(id)}} className="cross fas fa-times-circle"></i>
+                    <i onClick={() => {this.props.callback(id, interview.interviewee_key)}} className="cross fas fa-times-circle"></i>
                 </div>
             </div>
         </div>
