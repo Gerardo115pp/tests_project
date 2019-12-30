@@ -56,5 +56,15 @@ def handleResults():
     if request.method == 'POST':
         return user_data_getter.updateResults(request.form["key"],json.loads(request.form["results"]))
 
+@app.route("/catchUnfinishedTest", methods=['POST'])
+def catchUnfinishedTest():
+    if request.method == 'POST':
+        return user_data_getter.catchTest(json.loads(request.form['interview_data']))
+
+@app.route('/getCatchedInterviews', methods=['POST'])
+def getCatchedInterviews():
+    if request.method == 'POST':
+        return user_data_getter.getCatchedInterviews(request.form['user'])
+
 if __name__ == "__main__":
     app.run(debug=True)
