@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import Test from '../../classes/Test';
 import historial from '../historial';
 import * as intervieweeActions from '../../actions/intervieweeActions';
+import * as userActions from '../../actions/userActions';
 import { server_name } from '../../serverInfo';
 import '../../css/Interviewer.css';
 
@@ -22,8 +23,8 @@ class Interviews extends Component {
 
     async componentDidMount() {
         if (this.state.tests.length === 0) {
-            await this.props.get_tests();
-            let { needed_tests } = this.props;
+            await this.props.intervieweeActions.get_tests();
+            let { needed_tests } = this.props.intervieweeReducer;
             let { test_num } = this.state;
             if (Array.isArray(needed_tests)) {
                 this.test_obj = new Test(needed_tests[test_num]);
@@ -45,13 +46,29 @@ class Interviews extends Component {
     catchOnGoingTest = () => {
         const { tests, question_num, test_num } = this.state;
 
+        const interview_data = {
+            tests,
+            question_num,
+            test_num,
+            interviewee_answers: this.interviewee_answers,
+            interviewee_stats: this.interviewee_stats,
+            interviewee: this.props.intervieweeReducer.interviewee_key,
+            interview: this.props.intervieweeReducer.interview_key,
+            interviewer: this.props.userReducer.user_id
+        };
+
         const forma = new FormData();
-        forma.append('tests', tests);
-        forma.append('question_num', question_num);
-        forma.append('test_num', test_num);
-        forma.append('interviewee_answers', this.interviewee_answers);
-        forma.append('interviewee_stats', this.interviewee_stats);
-        forma.append('interviewee', this.props.interviewee_key);
+        forma.append('interview_data', JSON.stringify(interview_data));
+
+        const request = new Request(`${server_name}catchUnfinishedTest`,{method:'POST', body: forma});
+        fetch(request)
+            .then(promise => promise.json())
+            .then(response => {
+                if (response.response === 'bad')
+                {
+                    console.log('server couldnt save anwsers correctly...')
+                }
+            })
         
 
 
@@ -187,7 +204,7 @@ class Interviews extends Component {
 
     sendStats = async () => {
         let forma = new FormData();
-        forma.append('key',this.props.interview_key);
+        forma.append('key',this.props.intervieweeReducer.interview_key);
         forma.append('results',JSON.stringify(this.interviewee_stats));
         const request = new Request(`${server_name}handleResults`,{method: 'POST',body: forma});
         await fetch(request)
@@ -222,7 +239,18 @@ class Interviews extends Component {
 }
 
 const mapStateToProps = reducers => {
-    return reducers.intervieweeReducer
+    const {intervieweeReducer, userReducer} = reducers;
+    return {
+        'intervieweeReducer': intervieweeReducer,
+        'userReducer': userReducer
+    }
 }
 
-export default connect(mapStateToProps, intervieweeActions)(Interviews)
+const mapDispatchToProps = dispatch => {
+    return {
+        'userActions': userActions, 
+        'intervieweeActions':  intervieweeActions
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Interviews)

@@ -10,9 +10,47 @@ import { server_name } from '../../serverInfo';
 class TestMenu extends Component
 {
 
+    
+    unfinished_tests = []
+
     state = {
         list_needed_tests: [],
-        needed_tests: {}
+        needed_tests: {},
+        unfinished_tests: false
+    }
+
+
+    componentDidMount()
+    {
+        /**
+         * Here we are checking if there are any unfinished test created by user that were no completed.
+         * if so, then we set 'this.unfinished_test=response.cached' which means that now 'this.unfinished_test' contains
+         * a list with all the  unfinished test and the requierd data to resume them (one at the time). then this.state.unfinished_tests
+         * (this.unfinished !== this.state.unfinished) is set to true, so the components get loaded in the render()
+         */
+
+        const { unfinished_tests } = this.state;
+
+        if(!unfinished_tests)
+        {
+            const { user_id } = this.props.user;
+            const forma = new FormData();
+            forma.append('user', user_id);
+
+            const request = new Request(`${server_name}getCatchedInterviews`, {method: 'POST', body: forma});
+            fetch(request)
+                .then(promise => promise.json())
+                .then(response => {
+                    if(response.cached.length > 0)
+                    {
+                        this.unfinished_tests = response.cached;
+                        console.log(JSON.stringify(this.unfinished_tests));
+                        this.setState({
+                            unfinished_tests: true
+                        })
+                    }
+                })
+        } 
     }
 
     backArrowHandler = e => {
@@ -33,7 +71,6 @@ class TestMenu extends Component
             list_needed_tests:list
         })
     } 
-
 
     proceedToTests = async () => {
         
@@ -63,6 +100,14 @@ class TestMenu extends Component
     }
 
     render(){
+        let content = "";
+        if (this.unfinished_tests.length > 0)
+        {
+            content = (<div id="show-modal-unfinished-btn">
+                            <h5>Unfinished Tests</h5>
+                       </div>)
+        }
+
         return(
             <React.Fragment>
                 <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} />
@@ -92,6 +137,9 @@ class TestMenu extends Component
                             <div id="ok-btn-container">
                                 <button id="test-menu-ok-btn" onClick={this.proceedToTests}>OK</button>
                             </div>
+                        </div>
+                        <div id="unfinished-tests-modal-container">
+                            {content}
                         </div>
                     </div>
                 </div>
