@@ -87,23 +87,28 @@ class TestMenu extends Component
          * Sends the data of the interviewed to the server, and requests the needed tests, then proceeds to the
          * interviews page.
          */
-        this.props.clearUTdata();
-        const {list_needed_tests} = this.state;
-        let forma = new FormData();
-        forma.append('name',document.getElementById('nombre-input').value);
-        forma.append('needed',JSON.stringify(list_needed_tests));
-        forma.append('user_id', this.props.user.user_id);
-        let request = new Request(`${server_name}createNewInterview`,{method: 'POST',body:forma});
-        const namer_tag = document.getElementById('nombre-input').value;
-        await fetch(request)
-                .then(promise => promise.json())
-                .then(result => {
-                    if(!result.error)
-                    {
-                        this.props.setInterviewee(result.tests,namer_tag,result.interviewee_key,result.interview_key);
-                        historial.push('/interviews');
-                    }
-                })
+        const interviewee_name = document.getElementById('nombre-input').value;
+        const { list_needed_tests } = this.state;
+        if (interviewee_name.length > 0 && list_needed_tests.length > 0)
+        {
+            this.props.clearUTdata();
+            let forma = new FormData();
+            forma.append('name',interviewee_name);
+            forma.append('needed',JSON.stringify(list_needed_tests));
+            forma.append('user_id', this.props.user.user_id);
+            let request = new Request(`${server_name}createNewInterview`,{method: 'POST',body:forma});
+            const namer_tag = document.getElementById('nombre-input').value;
+            await fetch(request)
+                    .then(promise => promise.json())
+                    .then(result => {
+                        if(!result.error)
+                        {
+                            this.props.setInterviewee(result.tests,namer_tag,result.interviewee_key,result.interview_key);
+                            historial.push('/interviews');
+                        }
+                    })
+        }
+        
         
         
     }

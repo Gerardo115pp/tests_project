@@ -187,7 +187,7 @@ class UsersDataGetter:
             tests:[test_content_1,test_content_2...test_content_n]
         }
         """
-        if type(tests).__name__ == 'list':
+        if type(tests).__name__ == 'list' and name and len(tests):
             interviewee_key = self.createInterviewee(name,user_id)
             sql = ""
             print(f"{interviewee_key} requested for tests: {tests}")
@@ -234,7 +234,10 @@ class UsersDataGetter:
                     mysql['conn'].close()    
                 return response
         else:
-            print(f'parameter \'test\' must be of type \'list\' but instead got \'{type(test).__name__}\'')
+            if type(tests).__name__ != 'list':
+                print(f'parameter \'test\' must be of type \'list\' but instead got \'{type(test).__name__}\'')
+            else:
+                print("got empty parameters")
             return self.getBadResponse()
             
     def createInterviewee(self, name, user_id):
