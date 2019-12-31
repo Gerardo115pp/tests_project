@@ -13,17 +13,6 @@ class Results extends Component
         interviews: {}
     }
 
-    checkResponse = interviews => {
-        for(let interviewee_key of Object.keys(interviews))
-        {
-            if(interviews[interviewee_key].results === null)
-            {
-                this.deleteResultFromDB(interviewee_key);
-                delete interviews[interviewee_key];
-            }
-        }
-        return interviews;
-    }
 
     componentWillMount() 
     {
@@ -37,7 +26,7 @@ class Results extends Component
             .then(response => {
                 if(Object.keys(response.interviews).length > 0)
                 {
-                    const interviews = this.checkResponse(response.interviews);
+                    const interviews = response.interviews;
                     this.setState({
                         interviews: interviews
                     })
