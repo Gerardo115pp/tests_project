@@ -2,21 +2,23 @@ import React,{Component} from 'react';
 import {connect} from 'react-redux';
 import '../../css/TestMenu.css';
 import ModalTests from '../ModalTests';
+import UTModal from '../unfinishedTests';
 import historial from '../historial';
 import * as intervieweeActions from '../../actions/intervieweeActions';
+import * as utActions from '../../actions/utActions';
 import { isBlock } from '@babel/types';
 import { server_name } from '../../serverInfo';
 
 class TestMenu extends Component
 {
 
-    
-    unfinished_tests = []
+    showing_uts = false;
+    unfinished_tests = []; // the ut info is stored here
 
     state = {
         list_needed_tests: [],
         needed_tests: {},
-        unfinished_tests: false
+        unfinished_tests: false //true only if the server says that there are ut(unfinished tests) created by the current user
     }
 
 
@@ -44,7 +46,7 @@ class TestMenu extends Component
                     if(response.cached.length > 0)
                     {
                         this.unfinished_tests = response.cached;
-                        console.log(JSON.stringify(this.unfinished_tests));
+                        // console.log(JSON.stringify(this.unfinished_tests));
                         this.setState({
                             unfinished_tests: true
                         })
@@ -58,6 +60,9 @@ class TestMenu extends Component
     }
 
     checkSelectIndex = () => {
+        /**
+         * checks if the user selects customs interview, this function will be removed, is just a hot fix
+         */
         const select_tag = document.getElementById('test-type-selector');
         const selected_option = document.querySelector(`#test-type-selector option[value='${select_tag.selectedIndex}']`);
         if(selected_option.value === "4")
@@ -67,6 +72,9 @@ class TestMenu extends Component
     }
 
     getSelectedTests = list => {
+        /**
+         * callback used by the ModalTest
+         */
         this.setState({
             list_needed_tests:list
         })
@@ -76,9 +84,10 @@ class TestMenu extends Component
         
         /**
          *
-         * Sends the data of the interviewed to the server, and requests the needed tests
-         *
+         * Sends the data of the interviewed to the server, and requests the needed tests, then proceeds to the
+         * interviews page.
          */
+        this.props.clearUTdata();
         const {list_needed_tests} = this.state;
         let forma = new FormData();
         forma.append('name',document.getElementById('nombre-input').value);
@@ -99,17 +108,51 @@ class TestMenu extends Component
         
     }
 
+    showUtsModal = () => {
+        /**
+         * show the ut modal if there are more the one ut if there is only one then it directly resumes that ut
+         */
+        if(this.unfinished_tests.length === 1)
+        {
+            return this.resumeUT(0)
+        }
+        const element = document.getElementById('select-ut-modalbackground');
+        if(!this.showing_uts)
+        {
+            element.style.display = 'block';
+        }
+        else
+        {
+            element.removeAttribute('style');
+        }
+        this.showing_uts = !this.showing_uts;
+    }
+
+    resumeUT = index => {
+        /**
+         * if the server says that there is ut created by the user, then it sets it in the redux store and proceeds to the 
+         * interviews components
+         */
+        if(this.state.unfinished_tests)
+        {
+            const ut = this.unfinished_tests[index];
+            this.props.setUT(ut);
+            historial.push('/interviews')
+        }
+    }
+
     render(){
         let content = "";
-        if (this.unfinished_tests.length > 0)
+        if (this.unfinished_tests.length > 0) // Create th ut botton if there are any uts
         {
-            content = (<div id="show-modal-unfinished-btn">
-                            <h5>Unfinished Tests</h5>
+            content = (<div id="unfinished-tests-modal-container">
+                            <h5>Tienes entrevistas sin terminar</h5>
                        </div>)
         }
 
         return(
             <React.Fragment>
+                <UTModal hiddingCallback={this.showUtsModal} uts={this.unfinished_tests} callback={this.resumeUT} />
                 <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} />
                 <div id='main-container'>
                     <span onClick={this.backArrowHandler} id='back-arrow'><i className="fas fa-arrow-left"></i></span>
@@ -138,7 +181,7 @@ class TestMenu extends Component
                                 <button id="test-menu-ok-btn" onClick={this.proceedToTests}>OK</button>
                             </div>
                         </div>
-                        <div id="unfinished-tests-modal-container">
+                        <div onClick={this.showUtsModal} id="unfinished-tests-modal-btn-container">
                             {content}
                         </div>
                     </div>
@@ -148,6 +191,9 @@ class TestMenu extends Component
     }
 
     showModal = (modal_id) => {
+        /**
+         * (Deprecated) Show and hides any modal
+         */
         const modal = document.getElementById(modal_id);
         if(isBlock(modal))
         {
@@ -163,8 +209,17 @@ class TestMenu extends Component
 const mapStateToProps = reducers => {
     return {
         interviewee: reducers.intervieweeReducer,
+        ut: reducers.utReducer,
         user: reducers.userReducer
     }
 }
 
-export default connect(mapStateToProps,intervieweeActions)(TestMenu);
+const mapDispatchToProps = dispatch => {
+    return {
+        'setInterviewee':(tests,namer_tag,interviewee_key,interview_key) => dispatch(intervieweeActions.setInterviewee(tests,namer_tag,interviewee_key,interview_key)),
+        'setUT': ut => dispatch(utActions.setUT(ut)),
+        'clearUTdata': () => dispatch(utActions.clearUTdata())
+    }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(TestMenu);

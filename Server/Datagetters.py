@@ -15,11 +15,16 @@ class UsersDataGetter:
                 self.credentials = json.load(f)
         else:
             raise DatagetterException("mysql\\mysql_credential.json is missing, keep in mind that the folder must be in the same directory as Datagetter.py")  
-        self.credentials["database"] = "interviews"
+        
+        self.credentials["database"] = "interviews" # selects the database that we will work with
         self.__hasher = Sha1()
         self.ok = {"response":"ok"}
     
     def login(self, user, password, ip):
+            """
+                confirms if the user password is correct (obviusly), and if true returns the
+                primary key of the user and a token that is composed by its user name and ip address.  
+            """
             mysql = self.__getConnAndCursor()
             try:
                 hsh = self.__hasher.get_hash(password)
@@ -92,6 +97,9 @@ class UsersDataGetter:
             mysql["conn"].close()
             
     def __getConnAndCursor(self):
+        """
+            returns a dict with a connection object and a cursor with results as dicts 
+        """
         conn = getConnection(self.credentials)
         cursor = conn.cursor(dictionary=True)
         return {
@@ -100,6 +108,9 @@ class UsersDataGetter:
         }
         
     def getBadResponse(self, msg="Server error, sorry for the inconvenience"):
+        """
+            Used to que an standar error msg with an option to customize the msg
+        """
         return {
             "response":"bad",
             "msg":msg
@@ -221,6 +232,9 @@ class UsersDataGetter:
             return self.getBadResponse()
             
     def createInterviewee(self, name, user_id):
+        """
+            Used to create an interviewee with its respectiv folder 
+        """
         mysql = self.__getConnAndCursor()
         interviewee_key = self.__hasher.get_hash(name+datetime.today().strftime('%f'))
         try:
@@ -240,6 +254,8 @@ class UsersDataGetter:
         
     def updateResults(self, interview_id, results):
         """
+            gets the results of an interview once is completele finished and updates its status on de DB
+        
             Spected reasponse format:
                 {response:"standar response"}
         """
@@ -331,6 +347,7 @@ class UsersDataGetter:
                         if not os.path.exists(path_to_cached_interview):
                             print(path_to_cached_interview)
                             # Interview need to be deleted here
+                            self.deleteITbyInterviewId(result['applyed_to'])
                             continue
                         
                         with open(path_to_cached_interview, 'r') as f:

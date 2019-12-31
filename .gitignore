@@ -28,6 +28,7 @@ yarn-error.log*
 #custom
 Recursos\ y\ Materiales/
 Server/tests/
+Server/users/
 Server/interviews/
 Server/mysql/
 Docs/

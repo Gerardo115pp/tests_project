@@ -104,7 +104,7 @@ fieldset#inputs-container{
     width: 15%;
     background-color: var(--sub-section);
     color: white;
-    margin: 2% 43.5%;
+    margin: 2% auto;
     padding: 1%;
     border-radius: 5px;
     border: none;
@@ -133,5 +133,38 @@ fieldset#inputs-container{
 =            Unfinished Tests            =
 =============================================*/
 
+#unfinished-tests-modal-btn-container{
+    width: 100%;
+    display: flex;
+    justify-content: center;
 
+}
 
+#unfinished-tests-modal-container{
+    cursor: pointer;
+    width: 40%;
+    height: 3rem;
+    box-sizing: border-box;
+    background: var(--danger);
+    color: white;
+    margin: 3% 0;
+    padding: 1%;
+    border-radius: 5px;
+    text-align: center;
+    transition: all .3s ease-in;
+}
+
+#unfinished-tests-modal-container h5{
+    font-family: 'Blinker';
+    margin: 0;
+
+}
+
+#unfinished-tests-modal-container:hover{
+    transform: scale(1.02);
+}
+
+#unfinished-tests-modal-container:active{
+    background: var(--clicked-danger);
+    transform: scale(0.98);
+}
