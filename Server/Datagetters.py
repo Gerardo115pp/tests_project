@@ -136,8 +136,13 @@ class UsersDataGetter:
                             return self.getBadResponse("failed to delete ITs")
                     mysql['cursor'].execute(f"DELETE FROM interviews WHERE applyed_to='{interviewee}';")
                     mysql['conn'].commit()
-                    
-                interviewer_directory = self.getUserFolder(interview['created_by'])
+                    interviewer_id = interview['created_by']
+                else:
+                    mysql['cursor'].execute(f"SELECT interviewer FROM interviewees WHERE id='{interviewee}';")
+                    interviewer_id = mysql['cursor'].fetchall()
+                    interviewer_id = interviewer_id[0]["interviewer"]
+                
+                interviewer_directory = self.getUserFolder(interviewer_id)
                 interviewee_directory = f"{interviewer_directory}/Interviewees/{interviewee}/"
                 if os.path.exists(interviewee_directory):
                     rmtree(interviewee_directory)
@@ -348,7 +353,7 @@ class UsersDataGetter:
                         if not os.path.exists(path_to_cached_interview):
                             print(path_to_cached_interview)
                             # Interview need to be deleted here
-                            self.deleteITbyInterviewId(result['applyed_to'])
+                            self.deleteIntervieweeById(result['applyed_to'])
                             continue
                         
                         with open(path_to_cached_interview, 'r') as f:
@@ -399,6 +404,5 @@ class UsersDataGetter:
         if re.match(r"^[\d]+", str(user_id)):
             return True
         return False
-    
     
     

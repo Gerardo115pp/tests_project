@@ -26,14 +26,15 @@ yarn-debug.log*
 yarn-error.log*
 
 #custom
-Recursos\ y\ Materiales/
-Server/tests/
-Server/users/
-Server/interviews/
+Recursos\ y\ Materiales
+Server/tests
+Server/users/*
+Server/users
+Server/mysql
 
 # Python
 Server/__pycache__/*
 
-Docs/
+Docs
 
 DB_LocalBackups/
