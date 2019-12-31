@@ -28,10 +28,11 @@ yarn-error.log*
 #custom
 Recursos\ y\ Materiales/
 Server/tests/
+Server/users/
 Server/interviews/
 
 # Python
-/**/__pycache__
+Server/__pycache__/*
 
 Docs/
 

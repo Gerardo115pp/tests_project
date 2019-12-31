@@ -15,15 +15,20 @@ class UsersDataGetter:
                 self.credentials = json.load(f)
         else:
             raise DatagetterException("mysql\\mysql_credential.json is missing, keep in mind that the folder must be in the same directory as Datagetter.py")  
-        self.credentials["database"] = "interviews"
+        
+        self.credentials["database"] = "interviews" # selects the database that we will work with
         self.__hasher = Sha1()
         self.ok = {"response":"ok"}
     
     def login(self, user, password, ip):
+            """
+                confirms if the user password is correct (obviusly), and if true returns the
+                primary key of the user and a token that is composed by its user name and ip address.  
+            """
             mysql = self.__getConnAndCursor()
             try:
                 hsh = self.__hasher.get_hash(password)
-                sql = f"SELECT * FROM usuarios WHERE name='{user}';"
+                sql = f"SELECT * FROM users WHERE name='{user}';"
                 mysql["cursor"].execute(sql)
                 user_credentials = mysql["cursor"].fetchall()
                 if len(user_credentials) == 1:
@@ -37,7 +42,7 @@ class UsersDataGetter:
                     else:
                         return {'response':'wrong'}
             except Exception as e:
-                print(f"Error({e.with_traceback()})")
+                print(f"Error({e})")
             finally:
                 mysql["conn"].close()
     
@@ -92,6 +97,9 @@ class UsersDataGetter:
             mysql["conn"].close()
             
     def __getConnAndCursor(self):
+        """
+            returns a dict with a connection object and a cursor with results as dicts 
+        """
         conn = getConnection(self.credentials)
         cursor = conn.cursor(dictionary=True)
         return {
@@ -100,6 +108,9 @@ class UsersDataGetter:
         }
         
     def getBadResponse(self, msg="Server error, sorry for the inconvenience"):
+        """
+            Used to que an standar error msg with an option to customize the msg
+        """
         return {
             "response":"bad",
             "msg":msg
@@ -221,6 +232,9 @@ class UsersDataGetter:
             return self.getBadResponse()
             
     def createInterviewee(self, name, user_id):
+        """
+            Used to create an interviewee with its respectiv folder 
+        """
         mysql = self.__getConnAndCursor()
         interviewee_key = self.__hasher.get_hash(name+datetime.today().strftime('%f'))
         try:
@@ -240,6 +254,8 @@ class UsersDataGetter:
         
     def updateResults(self, interview_id, results):
         """
+            gets the results of an interview once is completele finished and updates its status on de DB
+        
             Spected reasponse format:
                 {response:"standar response"}
         """
@@ -283,4 +299,105 @@ class UsersDataGetter:
         mysql['conn'].close()
         return data_folder
 
+    def catchTest(self, interview_data):
+        """
+        
+            interview_data is expected to be a dictionary containg the keys ('tests', 'question_num', 'test_num', 'interviewee_answers', 'interviewee_stats', 'interviewee', 'interview', 'interviewer')
+            
+            Spected reasponse format:
+                {response:"standar response"}
+                    
+        """
+        expected_params = ['tests', 'question_num', 'test_num', 'interviewee_answers', 'interviewee_stats', 'interviewee', 'interview', 'interviewer']
+        if expected_params == list(interview_data.keys()):
+            # print(f"catching ongoing interview with interview data:\n{interview_data}")
+            path_to_results = f"{self.getUserFolder(interview_data['interviewer'])}Interviewees/{interview_data['interviewee']}/"
+            if not os.path.exists(path_to_results):
+                os.mkdir(path_to_results)
+                
+            with open(f"{path_to_results+interview_data['interview']}.json", 'w') as f:
+                json.dump(interview_data,f)
+            print(f'Success on catching interview {interview_data["interview"]}')
+            return self.ok
+        print(f"catchTests data expect a dict with keys <{expected_params}>\n instead found:\n <{list(interview_data.keys())}>")
+        return self.getBadResponse()        
+    
+    def getCatchedInterviews(self, user_id):
+        """
+            Gets all if any unfinished user interviews, if it finds interviews with status (in the DB)
+            'was_finished=0' but no cached results, then it deletes it
+            
+            Spected reasponse format:
+                {cached:[cached_interview_file_content_1, cached_interview_file_content_2, ..., cached_interview_file_content_n]}
+                
+        """
+        if self.validateUserId(user_id):
+            mysql = self.__getConnAndCursor()
+            print(f"Getting unfinished interviews of user {user_id}...")
+            try:
+                mysql['cursor'].execute(f"SELECT id, applyed_to FROM interviews WHERE created_by={user_id} AND was_finished=0;")
+                results = mysql['cursor'].fetchall()
+                if results:
+                    
+                    user_folder = self.getUserFolder(user_id)
+                    response = {'cached':[]}
+                     
+                    for result in results:
+                        path_to_cached_interview = f"{user_folder}Interviewees/{result['applyed_to']}/{result['id']}.json"
+                        if not os.path.exists(path_to_cached_interview):
+                            print(path_to_cached_interview)
+                            # Interview need to be deleted here
+                            self.deleteITbyInterviewId(result['applyed_to'])
+                            continue
+                        
+                        with open(path_to_cached_interview, 'r') as f:
+                            cached_data = json.load(f)
+                        additional_data = self.__getIntervieweeNameNdTests(cached_data["interview"])
+                        cached_data["interviewee_name"] = additional_data["name"]
+                        cached_data["tests_names"] = additional_data["tests"]
+                        response['cached'].append(cached_data)
+                    
+                    print(f"Got {len(response['cached'])} unfinished interview...")
+                    return response                    
+                else:
+                    print(f"no unfinished interviews by user '{user_id}'...")
+                    return {'cached':[]}
+            except Exception as e:
+                print(e)
+                return self.getBadResponse()
+            finally:
+                mysql['conn'].close()
+        else:
+            print(f"user id '{user_id}' is not valid!")
+            return self.getBadResponse()
+        
+    def __getIntervieweeNameNdTests(self, interview_id):
+        """
+            gets interview all the interview's tests short names and the name of the interviewee that took them
+        """
+        mysql = self.__getConnAndCursor()
+        try:
+            sql = f"SELECT interviewees.name AS interviewee, tests.short_name FROM tests,interviewstests,interviews,interviewees WHERE interviews.applyed_to=interviewees.id AND interviews.id=interviewstests.interview AND tests.id=interviewstests.test AND interviews.id='{interview_id}';"
+            mysql['cursor'].execute(sql)
+            results = mysql['cursor'].fetchall()
+            if results:
+                response = {"name": results[0]['interviewee'], "tests":[]}
+                for result in results:
+                    response["tests"].append(result["short_name"])
+                
+                return response  
+            else:
+                 raise DatagetterException(f"Error on query: {sql}\nreturned {results}")
+        except Exception as e:
+            print(e)
+            return False
+        finally:
+            mysql['conn'].close()
+    
+    def validateUserId(self, user_id):
+        if re.match(r"^[\d]+", str(user_id)):
+            return True
+        return False
+    
+    
     

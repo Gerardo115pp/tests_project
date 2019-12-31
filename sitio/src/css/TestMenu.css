@@ -1,9 +1,4 @@
-:root{
-    --grey: rgb(130,130,130);
-    --cyan: rgb(0, 247, 255);
-    --cyan-clicked: rgb(12, 176, 182);
-    --sub-section: rgb(3, 227, 235);
-}
+@import url('colors.css');
 
 /*
  
@@ -22,11 +17,11 @@
 }
 
 #options-page.non-vertical{
-    height:100vh;
+    height:90%;
+    width: 100%;
     display: flex;
-    align-items: flex-start;
-    margin-top: 5%;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 #back-arrow{
     cursor: pointer;
@@ -46,10 +41,11 @@
 =============================================*/
 
 #form-title-container{
+    display: flex;
     font-family: 'Blinker';
-    width: 90%;
     font-size:1.6rem;
     text-align: center;
+    justify-content: center;
     /* margin-bottom: 20% */
 }
 
@@ -71,7 +67,15 @@ fieldset#inputs-container{
     border: none
 }
 
+.form-input-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .form-input-container label{
+    align-self: flex-start;
+    margin: 0 0 1% 10%;
     font-size: 1.5rem;
     color: var(--sub-section);
 }
@@ -89,9 +93,9 @@ fieldset#inputs-container{
 
 /*----------  ok btn  ----------*/
 
-#ok-btn-container{
+/* #ok-btn-container{
     width: 90%
-}
+} */
 
 #test-menu-ok-btn{
     cursor: pointer;
@@ -100,7 +104,7 @@ fieldset#inputs-container{
     width: 15%;
     background-color: var(--sub-section);
     color: white;
-    margin: 0 auto;
+    margin: 2% auto;
     padding: 1%;
     border-radius: 5px;
     border: none;
@@ -121,4 +125,46 @@ fieldset#inputs-container{
     padding: 1%;
     border-radius: 5px;
     border: none
+}
+
+
+
+/*=============================================
+=            Unfinished Tests            =
+=============================================*/
+
+#unfinished-tests-modal-btn-container{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+}
+
+#unfinished-tests-modal-container{
+    cursor: pointer;
+    width: 40%;
+    height: 3rem;
+    box-sizing: border-box;
+    background: var(--danger);
+    color: white;
+    margin: 3% 0;
+    padding: 1%;
+    border-radius: 5px;
+    text-align: center;
+    transition: all .3s ease-in;
+}
+
+#unfinished-tests-modal-container h5{
+    font-family: 'Blinker';
+    margin: 0;
+
+}
+
+#unfinished-tests-modal-container:hover{
+    transform: scale(1.02);
+}
+
+#unfinished-tests-modal-container:active{
+    background: var(--clicked-danger);
+    transform: scale(0.98);
 }
