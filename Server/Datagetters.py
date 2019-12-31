@@ -63,9 +63,9 @@ class UsersDataGetter:
             sql = f"SELECT interviews.id as interview, interviewees.name, interviewees.id as interviewee FROM interviews INNER JOIN interviewees ON interviews.applyed_to=interviewees.id AND interviews.created_by={user_id} AND interviews.was_finished=1;"
             mysql['cursor'].execute(sql)
             results = mysql['cursor'].fetchall()
+            response ={"interviews":{}}
             if results:
                 user_folder = self.getUserFolder(user_id)
-                response ={"interviews":{}}
                 for result in results:
                     print(f"Getting results of interview '{result['interview']}'...")
                     path_to_results = f"{user_folder}Interviewees/{result['interviewee']}/{result['interview']}.json"
@@ -89,7 +89,8 @@ class UsersDataGetter:
                 return response
             else:
                 print(f"Failure on query: {sql}")
-                return self.getBadResponse(f"unkown user id '{user_id}'")
+                return response
+            
         except Exception as e:
             print(f"Error while getting the results for '{user_id}': {e}")
             return self.getBadResponse()

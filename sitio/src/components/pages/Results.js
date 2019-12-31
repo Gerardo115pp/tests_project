@@ -35,7 +35,7 @@ class Results extends Component
         fetch(request)
             .then(promise => promise.json())
             .then(response => {
-                if(!response.error)
+                if(Object.keys(response.interviews).length > 0)
                 {
                     const interviews = this.checkResponse(response.interviews);
                     this.setState({
@@ -44,7 +44,7 @@ class Results extends Component
                 }
                 else
                 {
-                    console.log(response.error);
+                    console.log("no results gotten");
                 }
             })
     }
@@ -69,11 +69,14 @@ class Results extends Component
     renderResultsAsJsx = () => {
         const results_array = [];
         const { interviews } = this.state;
-        let h = 0;
-        for(let interview_key of Object.keys(interviews))
+        if(Object.keys(interviews).length > 0)
         {
-            results_array.push(<ResultBox key={h} id={interview_key} callback={this.deleteResult} interview={interviews[interview_key]}/>)
-            h++;
+            let h = 0;
+            for(let interview_key of Object.keys(interviews))
+            {
+                results_array.push(<ResultBox key={h} id={interview_key} callback={this.deleteResult} interview={interviews[interview_key]}/>)
+                h++;
+            }
         }
         return results_array;
     }
