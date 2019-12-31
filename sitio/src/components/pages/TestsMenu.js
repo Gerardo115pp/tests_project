@@ -142,6 +142,7 @@ class TestMenu extends Component
         {
             const ut = this.unfinished_tests[index];
             this.props.setUT(ut);
+            this.props.setInterviewee(ut.tests, ut.interviewee_name, ut.interviewee, ut.interview)
             historial.push('/interviews')
         }
     }

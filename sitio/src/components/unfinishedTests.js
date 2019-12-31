@@ -34,6 +34,7 @@ const unfinishedTests = props => {
                 {`${ut.interviewee_name.toUpperCase()} (${createShortName(ut['tests_names'])})`}
             </div>
         ))
+        ut_num++;
     });
 
     return(

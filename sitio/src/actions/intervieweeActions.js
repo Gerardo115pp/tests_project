@@ -3,7 +3,7 @@ export const setInterviewee = (tests,name,key,interview) => {
         type: 'set_interviewee',
         tests: tests,
         name: name,
-        key: key,
+        key: key,// the key of the interviewee
         interview_key: interview
     }
 }

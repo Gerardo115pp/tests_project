@@ -135,11 +135,12 @@ class Interviews extends Component {
          */
         const test_answers = Object.keys(this.interviewee_answers);
         let mide, results;
+        this.interviewee_stats[this.test_obj.name] = {};
         for (let question_code of test_answers)
         {
             results = this.interviewee_answers[question_code];
             mide = results.mide;
-            this.interviewee_stats[mide] = (this.interviewee_stats[mide]!==undefined) ? this.interviewee_stats[mide]+results.value : results.value;
+            this.interviewee_stats[this.test_obj.name][mide] = (this.interviewee_stats[mide]!==undefined) ? this.interviewee_stats[mide]+results.value : results.value;
         }
         this.interviewee_answers = {};
         console.log(JSON.stringify(this.interviewee_stats));
