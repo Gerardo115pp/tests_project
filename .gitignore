@@ -30,6 +30,9 @@ Recursos\ y\ Materiales/
 Server/tests/
 Server/interviews/
 
+# Python
+/**/__pycache__
+
 Docs/
 
 DB_LocalBackups/
