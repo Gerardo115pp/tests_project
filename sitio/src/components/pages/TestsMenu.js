@@ -1,13 +1,13 @@
 import React,{Component} from 'react';
 import {connect} from 'react-redux';
-import '../../css/TestMenu.css';
-import ModalTests from '../ModalTests';
+import SettingsNavModal from '../settingsNavModal';
 import UTModal from '../unfinishedTests';
 import historial from '../historial';
 import * as intervieweeActions from '../../actions/intervieweeActions';
 import * as utActions from '../../actions/utActions';
 import { isBlock } from '@babel/types';
 import { server_name } from '../../serverInfo';
+import '../../css/TestMenu.css';
 
 class TestMenu extends Component
 {
@@ -133,6 +133,14 @@ class TestMenu extends Component
         this.showing_uts = !this.showing_uts;
     }
 
+    openUserSettingsNav = () => {
+        const element = document.getElementById('settings-nav-background');
+        if(element !== undefined)
+        {
+            element.style.display = 'block';
+        }
+    }
+
     resumeUT = index => {
         /**
          * if the server says that there is ut created by the user, then it sets it in the redux store and proceeds to the 
@@ -158,10 +166,14 @@ class TestMenu extends Component
 
         return(
             <React.Fragment>
+                <SettingsNavModal />
                 <UTModal hiddingCallback={this.showUtsModal} uts={this.unfinished_tests} callback={this.resumeUT} />
-                <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} />
+                {/* <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} /> */}
                 <div id='main-container'>
-                    <span onClick={this.backArrowHandler} id='back-arrow'><i className="fas fa-arrow-left"></i></span>
+                    <div id="tests-menu-controls">
+                        <span onClick={this.backArrowHandler} id='back-arrow'><i className="fas fa-arrow-left"></i></span>
+                        <span onClick={this.openUserSettingsNav} id='settings-btn'><i className="fas fa-user-cog"></i></span>
+                    </div>
                     <div id="options-page" className="non-vertical">
                         <div id="form-options-container">
                             <div id="form-title-container">

@@ -12,9 +12,6 @@
 */
 
 
-#main-container{
-    margin-top: 1%;
-}
 
 #options-page.non-vertical{
     height:90%;
@@ -23,7 +20,18 @@
     flex-direction: column;
     align-items: center;
 }
-#back-arrow{
+
+
+/*=============================================
+=            Controls            =
+=============================================*/
+
+#tests-menu-controls{
+    display: flex;
+    justify-content: space-between;
+}
+
+#tests-menu-controls span{
     cursor: pointer;
     font-size: 3rem;
     margin: 1%;
@@ -33,6 +41,15 @@
 
 #back-arrow:hover{
     color: var(--cyan)
+}
+
+#settings-btn{
+    transition: all .07s linear;
+
+}
+
+#settings-btn:active{
+    color: var(--cyan); 
 }
 
 

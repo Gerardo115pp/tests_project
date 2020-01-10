@@ -6,6 +6,9 @@
 =            general classes            =
 =============================================*/
 
+li {
+    list-style: none;
+}
 
 .white-element{
     color: white;

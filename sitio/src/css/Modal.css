@@ -1,8 +1,6 @@
 @import url('colors.css');
 
-li {
-    list-style: none;
-}
+
 
 .modal-background{
     display:none;
@@ -24,33 +22,8 @@ li {
 	padding: 3%;
 }
 
-.modal-title{
-    font-family: 'Blinker';
-    text-align: center
-}
-
-#tests-list{
-    width: 80%;
-	height: 50vh;
-	text-align: center;
-	margin: 0 auto;
-	overflow:auto;
-	border-bottom: 2px solid var(--grey);
-}
-
-.test-option{
-	cursor: pointer;
-    font-family: 'Roboto Condensed';
-    color:rgb(90,90,90);
-	padding: 3% 0;
-	border-bottom: 2px solid var(--cyan);
-}
 
 #modal-close-btn {
 	padding: 3%;
 	margin: 4% auto 0;
-}
-
-.test-option:hover{
-	background-color: var(--ligth-cyan);
 }
