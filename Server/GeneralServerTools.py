@@ -181,9 +181,36 @@ def insertTestsFromJson(td_path='operational_data/testDictyonary.json', tl_path=
         finally:
             conn.close()
 
+def insertStatsMeasuerd(insert=False):
+    """
+        this method must be executed from the Server directory
+    """
+    response = {}
+    conn = getConnection(getCredentials('interviews'))
+    cursor = conn.cursor(dictionary=True)
+    for directory in os.scandir('./tests'):
+        for test_file in os.scandir(f"./tests/{directory.name}"):
+            with open(f"./tests/{directory.name}/{test_file.name}", 'r') as f:
+                test_data = json.load(f)
+            is_regular = 'questions' in test_data.keys()
+            test_name = test_data['name'] if is_regular else list(test_data.keys())[0]
+            test_questions = test_data['questions'] if is_regular else test_data[test_name]['questions']
+            stats = set([test_questions[q_num]["mide"] for q_num in test_questions.keys()])
+            response[test_name] = list(stats)
+            
+            if insert:
+                for stat in stats:
+                    cursor.execute(f"INSERT INTO stats(id, name) VALUES (NULL,'{stat}');")
+                    conn.commit()
+                    cursor.execute(f"INSERT INTO testsstats(test, stat) SELECT id AS test, {cursor.lastrowid} AS stat FROM tests WHERE full_name='{test_name}';")
+                    conn.commit()
+    conn.close()                    
+    return response
+            
 
 
 
 
 
-
+if __name__ == "__main__":
+    print(insertStatsMeasuerd())

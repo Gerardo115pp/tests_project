@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ResultDropDown from './ResultDropDown';
 import { connect } from 'react-redux';
 import * as resultsActions from '../actions/resultsActions';
 
@@ -21,9 +22,7 @@ class ResultsSideBar extends Component{
             const results_attribs = Object.keys(results);
             for(let h = 0; h < results_attribs.length; h++){
                 results_array.push(
-                    <div key={h} className="results-attrib-container">
-                        <span className="attrib-text">{`${this.setSpaces(results_attribs[h])}: `}<span className="attrib-text-num">{`${results[results_attribs[h]]}`}</span></span>
-                    </div>
+                    <ResultDropDown key={h} test_num={`test_${h}`} test_name={results_attribs[h]} test_results_data={results[results_attribs[h]]} />
                 )
             }
         }

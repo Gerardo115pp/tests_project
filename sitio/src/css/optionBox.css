@@ -1,8 +1,4 @@
-:root{
-    --grey: rgb(130,130,130);
-    --cyan: rgb(0, 247, 255);
-    --cyan-clicked: rgb(12, 176, 182);
-}
+@import url('colors.css');
 
 .option-box-container{
     cursor: pointer;

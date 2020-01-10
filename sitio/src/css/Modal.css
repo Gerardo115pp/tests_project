@@ -1,12 +1,4 @@
-:root{
-    --light-grey: rgb(219, 219, 219);
-    --grey: rgb(130,130,130);
-    --dark-grey: rgb(44, 44, 44);
-    --cyan: rgb(0, 247, 255);
-    --ligth-cyan: rgb(180, 252, 255);
-    --cyan-clicked: rgb(12, 176, 182);
-    --sub-section: rgb(3, 227, 235);
-}
+@import url('colors.css');
 
 li {
     list-style: none;

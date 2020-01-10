@@ -1,3 +1,4 @@
+@import url('colors.css');
 
 
 
@@ -20,7 +21,6 @@
 
 
 
-@import url('colors.css');
 
 img[alt="www.000webhost.com"]{
 	display: none;
