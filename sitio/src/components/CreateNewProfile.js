@@ -5,9 +5,12 @@ import '../css/CreateNewProfile.css';
 class CreateNewProfile extends Component
 {
 
+    cached_attributes = {};
+
     state = {
         tests:[],
-        tests_selected:[]
+        tests_selected:[],
+        measuerd_attributes: {}
     }
 
     async UNSAFE_componentWillMount()
@@ -25,6 +28,42 @@ class CreateNewProfile extends Component
         }
     }
 
+    requestTestAtrributes = async (test_code) => {
+        
+        
+        /**
+         *
+         * here we requeste all the attributes that are measuerd by the selected tests,
+         * this is called every time that the user select a test. if the requested test code is on
+         * the cached attributes the it just takes it from there, otherwise it requests it from the server
+         * and puts it into cached attributes.
+         *
+         * its been called from 'clickTestOptionHandler'.
+         * 
+         */
+        
+        
+        if( !(test_code in this.cached_attributes) )
+        {
+            await fetch(`${serverInfo.server_name}getTesttAttributes/${test_code}/`)
+                    .then(promise => promise.json())
+                    .then(response => {
+                        if (response.response !== 'bad')
+                        {
+                            // set it on the state and cache it on the 'cached_attributes' object
+                            this.cached_attributes[test_code] = response.attribs;
+                        }
+                    })
+        }
+        const { measuerd_attributes } = this.state;
+        measuerd_attributes[test_code] = this.cached_attributes[test_code];
+        this.setState(
+            {
+                measuerd_attributes: measuerd_attributes
+            }
+        )
+    }
+
     clickTestOptionHandler = e => {
         let {tests_selected} = this.state;
         const test_li = e.currentTarget;
@@ -34,11 +73,17 @@ class CreateNewProfile extends Component
             tests_selected.push(test_code);
             test_li.style.backgroundColor = 'rgb(0, 247, 255)';
             test_li.style.color = 'rgb(255,255,255)';
+            this.requestTestAtrributes(test_code);
         }
         else
         {
             tests_selected = tests_selected.filter(x => x !== test_code);
             test_li.removeAttribute('style');
+            const { measuerd_attributes } = this.state;
+            delete measuerd_attributes[test_code];
+            this.setState({
+                measuerd_attributes: measuerd_attributes
+            })
         }
         this.setState({
             tests_selected: tests_selected
@@ -64,6 +109,52 @@ class CreateNewProfile extends Component
         }
     }
 
+    getAttributesAsJsx = attributes_array => {
+        /**
+         * here we get the list of attributes that will be contained in the test div of the jsx
+         */
+        const attributes_jsx = [];
+        attributes_array.forEach(attrib => {
+            attributes_jsx.push((
+                <div className="profile-test-attrib">
+                    <h4 className="profile-test-attrib-name">{attrib}</h4>
+                    <div className="profile-attrib-input">
+                        <label>V.E</label>
+                        <input type="text" maxLength='3'/>
+                    </div>
+                    <div className="profile-attrib-input">
+                        <label>D.E</label>
+                        <input type="text" maxLength='3'/>
+                    </div>
+                </div>
+            ))
+        })
+
+        return attributes_jsx;
+    }
+
+    getTestsAttributesAsJsx = () => {
+        const { measuerd_attributes } = this.state;
+        if( Object.keys(measuerd_attributes).length > 0 )
+        {
+            const attribs_content = []; //the list that will contain the jsx
+
+            Object.keys(measuerd_attributes).forEach(test_code => {
+                const attributes = measuerd_attributes[test_code];
+                attribs_content.push((
+                    <div key={test_code} className="profile-testattribs-container">
+                        <h2 className="profile-testattribs-code">{test_code}</h2>
+                        {this.getAttributesAsJsx(attributes)}
+                    </div>
+                ))
+
+            })
+
+            return attribs_content;
+        }
+        return "Ah medida que selecciones pruebas, aqui apareceran los atributos que son medidos por estas";
+    }
+
     render()
     {
 
@@ -85,7 +176,7 @@ class CreateNewProfile extends Component
 
 
 
-        const stats_content = "Ah medida que seleccione las los pruebas, aqui apareceran los atributos que seran medidos"
+        const attribs_content = this.getTestsAttributesAsJsx();
         return(
             <div onClick={this.closeSelf} id="newprofile-modal-background">
                 <div id="newprofile-form-container">
@@ -103,10 +194,10 @@ class CreateNewProfile extends Component
                         </ul>
                     </div>
                     <div id="profile-stats-conainer">
-                        {stats_content}
+                        {attribs_content}
                     </div>
                     <div id="profile-controls">
-                        <div id="create-profile-btn">
+                        <div id="create-profile-btn" className='not-ready-btn-state'>
                             <p>Crear</p>
                         </div>
                     </div>

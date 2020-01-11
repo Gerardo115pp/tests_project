@@ -116,6 +116,7 @@
 
 #profile-stats-conainer{
     font-family: 'Roboto Condensed';
+    overflow-y: auto;
     width: 80%;
     height: 30vh;
     color: var(--grey);
@@ -123,6 +124,69 @@
     padding: 3%;
     border-top: 1px solid var(--dark-grey);
     border-bottom: 1px solid var(--dark-grey);
+}
+
+.profile-testattribs-container{
+    width: 100%;
+    background: var(--cyan);
+    padding-bottom: 1rem;
+}
+
+.profile-testattribs-container:first-child{
+    border-radius: calc(.30rem - 1px) calc(.30rem - 1px) 0 0;
+}
+
+.profile-testattribs-container:last-child{
+    border-radius:  0 0 calc(.30rem - 1px) calc(.30rem - 1px);
+}
+
+h2.profile-testattribs-code{
+    font-family: 'Blinker';
+    background-color: rgba(0, 0, 0, .03);
+    margin: 0;
+    color: white;
+    padding: calc(.75rem - 1px) 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, .125);
+    border-top: 1px solid rgba(0, 0, 0, .125);
+}
+
+.profile-testattribs-container:first-child h2{
+    border-top: none;
+}
+
+
+/*----------  Attribut  ----------*/
+
+.profile-test-attrib{
+    display: flex;
+    width: 50%;
+    color: white;
+    justify-content: space-around;
+    margin: 1rem 0 0 1.3rem;
+}
+
+.profile-test-attrib-name{
+    font-size: 1.1rem;
+    margin: 0;
+    text-transform: capitalize;
+}
+
+.profile-attrib-input{
+    width: 20%;
+}
+
+.profile-attrib-input label{
+    font-size: .8rem;
+    margin-right: .6rem;
+}
+
+.profile-attrib-input input{
+    font-family: 'Roboto Condensed';
+    background: rgba(0, 0, 0, 0);
+    width: 40%;
+    color: white;
+    border: none;
+    border-bottom: .15em solid rgba(0, 0, 0, .225);
 }
 
 
@@ -142,17 +206,21 @@
 #create-profile-btn{
     font-family: 'Roboto Condensed';
     cursor: pointer;
-    background: var(--cyan);
-    color: white;
     padding: 0.1rem 4%;
+    border: 1px solid var(--cyan);
     border-radius: 5px;
     transition: all .6s cubic-bezier(0.4, -0.29, 0.53, 0.79);
 }
 
-#create-profile-btn:hover{
-    background: rgb(69, 241, 247);
+.ready-btn-state{
+    background: var(--cyan);
+    color: white;   
 }
 
+.not-ready-btn-state{
+    background: white;
+    color: var(--cyan);
+}
 
 
 

@@ -409,3 +409,27 @@ class UsersDataGetter:
         return False
     
     
+    def getMeasuerdAttribsByShortName(self, short_name):
+        if type(short_name).__name__ == 'str' and re.match(r"^[A-Z\d]+$", short_name):
+            mysql = self.__getConnAndCursor()
+            try:
+                sql = f"SELECT stats.name FROM tests, testsstats, stats WHERE tests.id=testsstats.test AND testsstats.stat=stats.id AND tests.short_name='{short_name}';"
+                mysql["cursor"].execute(sql)
+                results = mysql["cursor"].fetchall()
+                if not results:
+                    print(f"WARNING: got no results from query:\n\t '{sql}'")
+                return {
+                        "response":"ok",
+                        "attribs": [a["name"] for a in results]
+                        }
+                
+            except Exception as e:
+                print(f"Error while getting attributes for '{short_name}': {e}")
+                return self.getBadResponse()
+            finally:
+                mysql["conn"].close()
+        else:
+            print(f"got invalid request for attributes of tests '{short_name}'")
+            return self.getBadResponse()
+        
+    

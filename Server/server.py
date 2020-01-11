@@ -66,5 +66,12 @@ def getCatchedInterviews():
     if request.method == 'POST':
         return user_data_getter.getCatchedInterviews(request.form['user'])
 
+@app.route('/getTesttAttributes/<test_short_name>/')
+def getTesttAttributes(test_short_name=None):
+    if test_short_name:
+        return user_data_getter.getMeasuerdAttribsByShortName(test_short_name)
+    else:
+        return user_data_getter.getBadResponse()
+
 if __name__ == "__main__":
     app.run(debug=True)
