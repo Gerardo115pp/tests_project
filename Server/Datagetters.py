@@ -60,12 +60,16 @@ class UsersDataGetter:
         print(f"Getting Interviews of user with id '{user_id}'...")
         mysql = self.__getConnAndCursor()
         try:
-            sql = f"SELECT interviews.id as interview, interviewees.name, interviewees.id as interviewee FROM interviews INNER JOIN interviewees ON interviews.applyed_to=interviewees.id AND interviews.created_by={user_id} AND interviews.was_finished=1;"
+            sql = f"SELECT interviews.id as interview, interviewees.name, interviewees.id as interviewee, profiles.path_to_file as profile FROM interviews, interviewees, profiles WHERE interviews.applyed_to=interviewees.id AND interviews.created_by={user_id} AND interviews.was_finished=1 AND profiles.id=interviews.profile;"
             mysql['cursor'].execute(sql)
             results = mysql['cursor'].fetchall()
             response ={"interviews":{}}
             if results:
                 user_folder = self.getUserFolder(user_id)
+                with open("./operational_data/testDictyonary.json", 'r') as f:
+                    data_string = f.read()
+                    data_string = data_string.replace('\\n', '')
+                    response['test_interview'] = json.loads(data_string)
                 for result in results:
                     print(f"Getting results of interview '{result['interview']}'...")
                     path_to_results = f"{user_folder}Interviewees/{result['interviewee']}/{result['interview']}.json"
@@ -73,10 +77,21 @@ class UsersDataGetter:
                     
                     if os.path.exists(path_to_results) and os.stat(path_to_results).st_size != 0:
                         with open(path_to_results, 'r') as f:
-                            result_content = json.load(f)
+                            data_string = f.read()
+                            data_string = data_string.replace("\\n", "")
+                            result_content = json.loads(data_string)
                     else:
                         print(f"no results found for '{result['interview']}'")
-                    
+ 
+                    #getting the profile that was used for this interview
+                    if os.path.exists(result["profile"]):
+                        with open(result["profile"]) as f:
+                            data_string = f.read()
+                            data_string = data_string.replace("\\n", "")
+                            profile = json.loads(data_string)                  
+                    else:
+                        print(f"profile file path not found: '{result['profile']}'")
+                        return self.getBadResponse()
                     
                     if not result_content:
                         continue
@@ -84,7 +99,8 @@ class UsersDataGetter:
                     response['interviews'][result['interview']] = {
                         "results": result_content,
                         "name": result["name"],
-                        "interviewee_key": result['interviewee']
+                        "interviewee_key": result['interviewee'],
+                        "profile": profile
                     }
                 return response
             else:
@@ -178,7 +194,7 @@ class UsersDataGetter:
             mysql['conn'].close()
         return False
     
-    def createInterview(self, name, tests, user_id):
+    def createInterview(self, name, tests, user_id, profile):
         """
         Spected reasponse format:
         {
@@ -205,7 +221,7 @@ class UsersDataGetter:
                 mysql = self.__getConnAndCursor()
                 try:
                     print(f'Inserting Interview \'{interview_uuid}\'...')
-                    mysql['cursor'].execute(f"INSERT INTO `interviews`(id, created_by, applyed_to) VALUES ('{interview_uuid}','{user_id}','{interviewee_key}');")
+                    mysql['cursor'].execute(f"INSERT INTO `interviews`(id, created_by, applyed_to, profile) VALUES ('{interview_uuid}','{user_id}','{interviewee_key}', {profile});")
                     mysql['conn'].commit()
                     
                     response = {
@@ -408,7 +424,6 @@ class UsersDataGetter:
             return True
         return False
     
-    
     def getMeasuerdAttribsByShortName(self, short_name):
         if type(short_name).__name__ == 'str' and re.match(r"^[A-Z\d]+$", short_name):
             mysql = self.__getConnAndCursor()
@@ -432,4 +447,62 @@ class UsersDataGetter:
             print(f"got invalid request for attributes of tests '{short_name}'")
             return self.getBadResponse()
         
-    
+    def saveNewProfile(self, profile_data, user):
+        try:
+            profile_data = json.loads(profile_data)
+        except json.JSONDecodeError as e:
+            print(f"An error ocurred while tying to parse profile values:\n{e}")
+            return self.getBadResponse()
+        if list(profile_data.keys()) == ['name', 'values']:
+            profiles_folder = f"{self.getUserFolder(user)}profiles"
+            
+            if not os.path.exists(profiles_folder):
+                os.mkdir(profiles_folder)
+            
+            path_to_file = f"{profiles_folder}/{profile_data['name']}.json"
+            with open(path_to_file, 'w') as f:
+                json.dump(profile_data, f)
+            
+            mysql = self.__getConnAndCursor()
+            try:
+                mysql["cursor"].execute(f"INSERT INTO profiles(id, name, path_to_file, creator) VALUES (NULL, '{profile_data['name']}', '{path_to_file}', {user});")
+                mysql["conn"].commit()
+            except Exception as e:
+                print(f"an error occured while trying to inert profile on the database:\n{e}")
+                return self.getBadResponse()
+            finally:
+                mysql["conn"].close()
+                
+            return self.ok                            
+
+    def getSimpleUserProfiles(self, user_id):
+        if re.match(r"^\d+$", user_id):
+            mysql = self.__getConnAndCursor()
+            try:
+                mysql["cursor"].execute(f"SELECT path_to_file, id FROM profiles;")
+                files = mysql["cursor"].fetchall()
+                if files:
+                    profiles = []
+                    for result in files:
+                        with open(result["path_to_file"], "r") as f:
+                            profile_json = json.load(f)
+                        
+                        profiles.append({
+                            "name": profile_json["name"],
+                            "profile_id": result["id"],
+                            "needed_tests": list(profile_json["values"].keys())
+                        })
+                    return {"response": "ok", "profiles": profiles}
+
+                else:
+                    print(f"no profiles where found for user {user_id}")
+                    return self.getBadResponse("No has creado ningun perfil aun")
+            except Exception as e:
+                print(f"getUserProfile: {e}")
+                return self.getBadResponse()
+            finally:
+                mysql["conn"].close()
+        else:
+            print(f"getUserProfile: invalid user_id '{user_id}'")
+            return self.getBadResponse()
+         

@@ -4,6 +4,7 @@ import ResultBox from '../ResultBox';
 import ResultsSideBar from '../ResultsSideBar';
 import historial from '../historial';
 import * as userActions from '../../actions/userActions';
+import * as resultsActions from '../../actions/resultsActions';
 import * as serverInfo from '../../serverInfo';
 import '../../css/Results.css';
 
@@ -16,7 +17,7 @@ class Results extends Component
 
     componentWillMount() 
     {
-        const { user_id } = this.props;
+        const { user_id } = this.props.userStore;
         const forma = new FormData();
         forma.append('id',user_id);
 
@@ -27,6 +28,7 @@ class Results extends Component
                 if(Object.keys(response.interviews).length > 0)
                 {
                     const interviews = response.interviews;
+                    this.props.setTestDictionary(response.test_interview)
                     this.setState({
                         interviews: interviews
                     })
@@ -90,7 +92,16 @@ class Results extends Component
 }
 
 const mapStateToProps = reducers => {
-    return reducers.userReducer;
+    return {
+        userStore: reducers.userReducer,
+        resultsStore: reducers.resultsReducer
+    }
 }
 
-export default connect(mapStateToProps,userActions)(Results);
+const mapDispatchToProps = dispatch => {
+    return {
+        setTestDictionary: td => dispatch(resultsActions.setTestDictonary(td))
+    }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(Results);

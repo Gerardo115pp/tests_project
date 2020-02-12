@@ -217,5 +217,21 @@ span.results-title-text{
 }
 
 .rdd-stat p, .rdd-stat span{
-    margin: 1% 0;
+    margin: 1% calc(1% - 1px);
 }
+
+
+/*----------  diferent states of acceptency  ----------*/
+
+.rdd-stat span.perfect-fit{
+    color: rgb(54, 170, 0)
+}
+
+.rdd-stat span.warning{
+    color: rgb(236, 201, 4)
+}
+
+.rdd-stat span.danger{
+    color: var(--danger)
+}
+

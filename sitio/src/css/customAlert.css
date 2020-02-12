@@ -1,0 +1,46 @@
+/*
+ 
+    ____          _                     _    _           _       
+   / ___|   _ ___| |_ ___  _ __ ___    / \  | | ___ _ __| |_ ___ 
+  | |  | | | / __| __/ _ \| '_ ` _ \  / _ \ | |/ _ \ '__| __/ __|
+  | |__| |_| \__ \ || (_) | | | | | |/ ___ \| |  __/ |  | |_\__ \
+   \____\__,_|___/\__\___/|_| |_| |_/_/   \_\_|\___|_|   \__|___/
+                                                                 
+ 
+*/
+
+@import url("colors.css");
+/*=============================================
+=            main container            =
+=============================================*/
+
+#alert-container{
+    font-family: 'Roboto Condensed';
+    display: flex;
+    position: fixed;
+    width: 44%;
+    background: var(--danger);
+    color: white;
+    justify-content: space-between;
+    /* margin: 0 16%; */
+    padding: calc(.65rem - 1px) 2%;
+    border-radius: 5px;
+}
+
+#alert-container.hidden-alert{
+    visibility: hidden;
+}
+
+/*=============================================
+=            Closing Arrow            =
+=============================================*/
+
+.alert-closing-btn{
+    cursor: pointer;
+    transition: color .5s ease-in-out;
+}
+
+.alert-closing-btn:hover{
+    color: rgba(255, 255, 255, .6);
+}
+

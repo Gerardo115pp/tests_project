@@ -67,6 +67,18 @@
 
 
 /*=============================================
+=            alerts container            =
+=============================================*/
+
+#alertsbox{
+    display: flex;
+    justify-content: center;
+}
+
+
+
+
+/*=============================================
 =            tests list            =
 =============================================*/
 
@@ -209,12 +221,17 @@ h2.profile-testattribs-code{
     padding: 0.1rem 4%;
     border: 1px solid var(--cyan);
     border-radius: 5px;
-    transition: all .6s cubic-bezier(0.4, -0.29, 0.53, 0.79);
+    transition: all .6s ease-in/*cubic-bezier(0.4, -0.29, 0.53, 0.79);*/
 }
 
 .ready-btn-state{
     background: var(--cyan);
     color: white;   
+}
+
+.ready-btn-state:active{
+    background: var(--cyan-clicked);
+    border-color: var(--cyan-clicked) !important;
 }
 
 .not-ready-btn-state{

@@ -10,13 +10,38 @@ const ResultDropDown = props => {
         return full_name.split("(")[0]
     }
 
+    const getResultColorClass = (stat, value) => {
+        if (/^\d+$/.test(value))
+        {
+            const { profile_data } = props;
+            value = parseInt(value);
+            const expected_value = profile_data[stat].VE,
+                  standar_diviation = profile_data[stat].DE;
+            
+            if (value < (expected_value - standar_diviation) || value > (expected_value + standar_diviation))
+            {
+                return "danger";
+            }
+            else if(value < (expected_value - (standar_diviation - (standar_diviation * 0.7))) || value > (expected_value + (standar_diviation - (standar_diviation * 0.7))))
+            {
+                return "warning";
+            }                  
+            else
+            {
+                return "perfect-fit";
+            }
+
+        }
+    }
+
     let stats = []
     for(let stat_name of Object.keys(test_results_data))
     {
+
         stats.push(
         <div key={stat_name} className="rdd-stat">
             <p>{`${stat_name}: `}</p>
-            <span>{test_results_data[stat_name]}</span>
+            <span className={getResultColorClass(stat_name, test_results_data[stat_name])}> {`  ${test_results_data[stat_name]}`}</span>
         </div>)
     }
 

@@ -15,14 +15,14 @@ class ResultsSideBar extends Component{
     }
 
     render(){
-        const { results, title_name } = this.props.results;
+        const { results, title_name, profile, test_dictionary } = this.props.results;
         let results_array = []; 
         if(results !== null)
         {
             const results_attribs = Object.keys(results);
             for(let h = 0; h < results_attribs.length; h++){
                 results_array.push(
-                    <ResultDropDown key={h} test_num={`test_${h}`} test_name={results_attribs[h]} test_results_data={results[results_attribs[h]]} />
+                    <ResultDropDown key={h} profile_data={profile["values"][test_dictionary[results_attribs[h]]]} test_num={`test_${h}`} test_name={results_attribs[h]} test_results_data={results[results_attribs[h]]} />
                 )
             }
         }

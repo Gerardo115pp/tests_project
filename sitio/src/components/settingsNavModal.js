@@ -1,5 +1,4 @@
 import React from 'react';
-import CreateNewProfile from './CreateNewProfile';
 import '../css/SettingsNavModal.css';
 
 function SettingsNavModal(props)
@@ -7,7 +6,6 @@ function SettingsNavModal(props)
 
     const handleUserClickBackground = e => {
         const element = e.target;
-        console.log(element)
         if( element.getAttribute('id') === 'settings-nav-background')
         {
             element.removeAttribute('style');
@@ -21,7 +19,6 @@ function SettingsNavModal(props)
 
     return(
         <React.Fragment>
-            <CreateNewProfile />
             <div onClick={handleUserClickBackground} id="settings-nav-background">
                 <div id="settings-nav-modal">
                     <div id="settings-nav-title">

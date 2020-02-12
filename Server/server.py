@@ -49,7 +49,7 @@ def getTests():
 def createNewInterview():
     if request.method == 'POST':
         tests = json.loads(request.form["needed"])
-        return user_data_getter.createInterview(request.form["name"],tests,request.form["user_id"])
+        return user_data_getter.createInterview(request.form["name"],tests,request.form["user_id"], request.form["profile_id"])
 
 @app.route('/handleResults',  methods=['POST'])
 def handleResults():
@@ -72,6 +72,18 @@ def getTesttAttributes(test_short_name=None):
         return user_data_getter.getMeasuerdAttribsByShortName(test_short_name)
     else:
         return user_data_getter.getBadResponse()
+
+@app.route('/createProfileForUser', methods=['POST'])
+def createProfileForUser():
+    if request.method == 'POST':
+        return user_data_getter.saveNewProfile(request.form['profile'], request.form['user'])
+    
+@app.route("/getSimpleUserProfiles/<user_id>/")
+def getSimpleUserProfiles(user_id=None):
+    if user_id:
+        return user_data_getter.getSimpleUserProfiles(user_id)
+    else:
+        user_data_getter.getBadResponse("no user id was given...")
 
 if __name__ == "__main__":
     app.run(debug=True)

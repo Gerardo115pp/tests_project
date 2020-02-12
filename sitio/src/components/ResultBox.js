@@ -6,10 +6,9 @@ class ResultBox extends Component
 {
     
     showResults = () => {
-        const { results, name } = this.props.interview;
+        const { results, name, profile } = this.props.interview;
         const sidebar = document.getElementById('results-side-bar');
-
-        this.props.setResults(results,name);
+        this.props.setResults(results, name, profile);
         sidebar.style.width = "30%";
     }
 

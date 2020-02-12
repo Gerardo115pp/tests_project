@@ -1,6 +1,7 @@
 import React,{Component} from 'react';
 import {connect} from 'react-redux';
 import SettingsNavModal from '../settingsNavModal';
+import CreateNewProfile from '../CreateNewProfile';
 import UTModal from '../unfinishedTests';
 import historial from '../historial';
 import * as intervieweeActions from '../../actions/intervieweeActions';
@@ -14,21 +15,57 @@ class TestMenu extends Component
 
     showing_uts = false;
     unfinished_tests = []; // the ut info is stored here
+    selected_profile_id = null;
 
     state = {
         list_needed_tests: [],
         needed_tests: {},
-        unfinished_tests: false //true only if the server says that there are ut(unfinished tests) created by the current user
+        unfinished_tests: false, //true only if the server says that there are ut(unfinished tests) created by the current user
+        profiles: [] // this is a list that will contain the profiles that will be displayed gotten by 'getUserProfilesAsJSX'
     }
 
+
+    requestUserProfiles = () => {
+        const { user_id } = this.props.user;
+        fetch(`${server_name}getSimpleUserProfiles/${user_id}`)
+            .then(promise => promise.json())
+            .then(response => {
+                if (response.response === "ok")
+                {
+                    if (response.profiles !== undefined)
+                    {
+                        this.setState({
+                            profiles: response.profiles
+                        })
+                    }
+                }
+            })
+    }
+
+    getUserProfilesAsJSX = () => {
+        const { profiles } = this.state;
+        if(profiles.length > 0)
+        {
+            const profiles_jsx = []
+            let key_counter = 0;
+            profiles.forEach(profile => {
+                profiles_jsx.push(<option key={`profile_${key_counter}`} profile_name={profile.name} value={`${key_counter}`}>{profile.name}</option>);
+                key_counter++;
+            })
+            return profiles_jsx;
+        }
+        return "You havent created any profiles";
+    }
 
     componentDidMount()
     {
         /**
-         * Here we are checking if there are any unfinished test created by user that were no completed.
+         * we are check if there are any unfinished test created by user that were no completed.
          * if so, then we set 'this.unfinished_test=response.cached' which means that now 'this.unfinished_test' contains
          * a list with all the  unfinished test and the requierd data to resume them (one at the time). then this.state.unfinished_tests
-         * (this.unfinished !== this.state.unfinished) is set to true, so the components get loaded in the render()
+         * (this.unfinished !== this.state.unfinished) is set to true, so the components get loaded in the render().
+         * 
+         * we call for the profiles the user has created.
          */
 
         const { unfinished_tests } = this.state;
@@ -52,6 +89,10 @@ class TestMenu extends Component
                         })
                     }
                 })
+        }
+        if(this.state.profiles.length === 0)
+        {
+            this.requestUserProfiles();
         } 
     }
 
@@ -63,12 +104,10 @@ class TestMenu extends Component
         /**
          * checks if the user selects customs interview, this function will be removed, is just a hot fix
          */
+        const { profiles } = this.state;
         const select_tag = document.getElementById('test-type-selector');
-        const selected_option = document.querySelector(`#test-type-selector option[value='${select_tag.selectedIndex}']`);
-        if(selected_option.value === "4")
-        {
-            this.showModal('tests-modal-container');
-        }
+        this.selected_profile_id = profiles[select_tag.selectedIndex].profile_id
+        this.getSelectedTests(profiles[select_tag.selectedIndex].needed_tests)
     }
 
     getSelectedTests = list => {
@@ -96,6 +135,7 @@ class TestMenu extends Component
             forma.append('name',interviewee_name);
             forma.append('needed',JSON.stringify(list_needed_tests));
             forma.append('user_id', this.props.user.user_id);
+            forma.append('profile_id', this.selected_profile_id);
             let request = new Request(`${server_name}createNewInterview`,{method: 'POST',body:forma});
             const namer_tag = document.getElementById('nombre-input').value;
             await fetch(request)
@@ -164,8 +204,11 @@ class TestMenu extends Component
                        </div>)
         }
 
+        const profiles_options = this.getUserProfilesAsJSX();
+
         return(
             <React.Fragment>
+                <CreateNewProfile callback={this.requestUserProfiles} />
                 <SettingsNavModal />
                 <UTModal hiddingCallback={this.showUtsModal} uts={this.unfinished_tests} callback={this.resumeUT} />
                 {/* <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} /> */}
@@ -187,11 +230,7 @@ class TestMenu extends Component
                                 <div className='form-input-container'>
                                     <label htmlFor="test-type-selector">tipo de entrevista</label>
                                     <select onChange={this.checkSelectIndex} name="tts" id="test-type-selector">
-                                        <option value="0">Jefe de cocina</option>
-                                        <option value="1">Gerente general</option>
-                                        <option value="2">Gerente de servicio</option>
-                                        <option value="3">Hosts</option>
-                                        <option value="4">Personalizado</option>
+                                        {profiles_options}
                                     </select>
                                 </div>
                             </fieldset>
