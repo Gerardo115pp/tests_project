@@ -6,10 +6,19 @@ import os, re, json
 
 app = Flask(__name__, static_url_path='')
 
+uuids_regex = re.compile(r"^[a-z\d]{40}$")
+token_users_regex = re.compile(r"^testToken_[a-z\d]{40}$")
 hasher = Sha1()
 user_data_getter = UsersDataGetter()
+tokens_data = {} #contains the users that created the test-tokes {test-token: user_id}
 
 CORS(app)
+
+def changeTokenUser(token_user):
+    if type(token_user).__name__ == 'str':
+        if token_users_regex.match(token_user):
+            token_user = token_user.split('_')[1]
+    return token_user
 
 @app.route('/validateUserToken',methods=['POST'])
 def validateUserToken():
@@ -26,6 +35,13 @@ def loginUsers():
     if request.method == 'POST':
         return user_data_getter.login(request.form['user_name'], request.form['password'], request.environ.get('HTTP_X_REAL_IP', request.remote_addr))
 
+@app.route('/getTestTokenInfo/<test_token>/')
+def getTestTokenInfo(test_token):
+    if uuids_regex.match(test_token):
+        if test_token not in tokens_data:
+            user_id = user_data_getter.getInterviewerByInterviewID(test_token)
+            tokens_data[test_token] = user_id
+        return user_data_getter.getTestTokenInfo(test_token, tokens_data[test_token])
 
 @app.route('/getInterviews', methods=['POST'])
 def getInterviews():
@@ -49,7 +65,7 @@ def getTests():
 def createNewInterview():
     if request.method == 'POST':
         tests = json.loads(request.form["needed"])
-        return user_data_getter.createInterview(request.form["name"],tests,request.form["user_id"], request.form["profile_id"])
+        return user_data_getter.createInterview(request.form["name"],tests,request.form["user_id"], request.form["profile_id"], request.form['tokenized'])
 
 @app.route('/handleResults',  methods=['POST'])
 def handleResults():
@@ -59,7 +75,12 @@ def handleResults():
 @app.route("/catchUnfinishedTest", methods=['POST'])
 def catchUnfinishedTest():
     if request.method == 'POST':
-        return user_data_getter.catchTest(json.loads(request.form['interview_data']))
+        interview_data = json.loads(request.form['interview_data'])
+        test_token = changeTokenUser(interview_data['interviewer'])
+        if test_token not in tokens_data:
+            tokens_data[test_token] = user_data_getter.getInterviewerByInterviewID(test_token)
+        interview_data['interviewer'] = tokens_data[test_token]
+        return user_data_getter.catchTest(interview_data)
 
 @app.route('/getCatchedInterviews', methods=['POST'])
 def getCatchedInterviews():

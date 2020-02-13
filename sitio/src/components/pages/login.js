@@ -2,6 +2,8 @@ import React,{Component} from 'react';
 import { connect } from 'react-redux'
 import * as serverInfo from '../../serverInfo';
 import * as userActions from '../../actions/userActions';
+import * as utActions from '../../actions/utActions';
+import * as intervieweeActions from '../../actions/intervieweeActions';
 import '../../css/login.css';
 import historial from '../historial';
 
@@ -38,7 +40,7 @@ class LoginPage extends Component
                 if(response.response==='ok')
                 {
                     setUserdata(name,response.token,response.id);
-                    historial.push('/main-menu');
+                    historial.push('/test-menu');
                 }
                 else if(response.error)
                 {
@@ -47,9 +49,45 @@ class LoginPage extends Component
             })
     }
 
+    searchForTestToken = url_params => {
+        if(url_params !== "")
+        {
+            url_params = url_params.slice(1);
+            url_params = url_params.split('&');
+            if(url_params.length === 1)
+            {
+                const token = url_params[0].split('=')[1]
+                if(/^[a-z\d]{40}$/.test(token))
+                {
+                    console.log(token);
+                    return token;
+                }
+            }
+        }
+        return "";
+    } 
+
+    prepareTestTokenUser = token => {
+        const user_reducer_data = `testToken_${token}`;
+        this.props.setUserdata(user_reducer_data, user_reducer_data, user_reducer_data);
+        fetch(`${serverInfo.server_name}getTestTokenInfo/${token}/`)
+            .then(promise => promise.json())
+            .then(response => {
+                this.props.clearUTdata();
+                this.props.setInterviewee(response.needed_tests,user_reducer_data, response.interviewee, token);
+                this.props.setUT(response.cached);
+                historial.push('/interviews')
+            })
+    }
+
     componentDidMount(){
-        const { user_name, user_token } = this.props;
-        if (user_name!==null && user_token!==null)
+        const { user_name, user_token } = this.props.userReducer;
+        const test_token = this.searchForTestToken(this.props.location.search);
+        if(test_token !== "")
+        {
+            this.prepareTestTokenUser(test_token);
+        }
+        else if (user_name!==null && user_token!==null)
         {
             const forma = new FormData();
             forma.append('user_name',user_name);
@@ -61,7 +99,7 @@ class LoginPage extends Component
                 .then(response => {
                     if(response.response === 'ok')
                     {
-                        historial.push('/main-menu');
+                        historial.push('/test-menu');
                     }
                     else if(response.response === 'invalid')
                     {
@@ -99,7 +137,20 @@ class LoginPage extends Component
 }
 
 const mapStateToProps = reducers => {
-    return reducers.userReducer;
+    return {
+        'userReducer': reducers.userReducer,
+        'utReducer': reducers.utReducer,
+        'intervieweeReducer': reducers.intervieweeReducer
+    };
 } 
 
-export default connect(mapStateToProps,userActions)(LoginPage);
+const mapDispatchToProps = dispatch => {
+    return {
+        'setUserdata': (name, token, id) => dispatch(userActions.setUserdata(name, token ,id)),
+        'clearUTdata': () => dispatch(utActions.clearUTdata()),
+        'setUT': ut => dispatch(utActions.setUT(ut)),
+        'setInterviewee': (tests, name, key, interview) => dispatch(intervieweeActions.setInterviewee(tests, name, key, interview))
+    }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(LoginPage);

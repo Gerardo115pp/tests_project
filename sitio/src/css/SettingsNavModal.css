@@ -28,6 +28,54 @@
 
 
 /*=============================================
+=            Token giver            =
+=============================================*/
+
+#token-giver{
+    cursor: default;
+    width: 35%;
+    max-width: 35%;
+    background: white;
+    align-self: center;
+    margin: 0 0 0 30%;
+    text-align: center;
+    padding: 1.5%;
+    border-radius: 5px;
+}
+
+@keyframes token-clicked {
+    0%{transform: scale(1);}
+    25%{transform: scale(1.1);}
+    50%{transform: scale(1);}
+    75%{transform: scale(1.1);}
+    100%{transform: scale(1);}
+}
+
+#token-container{
+    font-family: 'Roboto Condensed';
+    width: 80%;
+    cursor: pointer;
+    padding: .5vh;
+    color: rgba(0, 0, 0, .5);
+    border: calc(1px + .05em) solid rgba(0, 0, 0, .1);
+    border-radius: 2px;
+    text-align: center;
+    user-select: none;
+}
+
+#token-container:hover{
+    color: var(--sub-section);
+}
+
+#token-container:active{
+    animation-name: token-clicked;
+    animation-duration: .2s;
+    animation-iteration-count: infinite;
+}
+
+
+
+/*=============================================
 =            modal container            =
 =============================================*/
 

@@ -190,7 +190,15 @@ class Interviews extends Component {
                 {
                     this.compileTest(true);
                     console.log('interview done!');
-                    historial.push('/main-menu');
+                    const { user_id } = this.props.userReducer;
+                    if(!/^testToken_[a-z\d]{40}$/.test(user_id))
+                    {
+                        historial.push('/test-menu');
+                    }
+                    else
+                    {
+                        historial.push('/interview-done');
+                    }
                 }
                 
                 

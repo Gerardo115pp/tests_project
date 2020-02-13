@@ -1,4 +1,4 @@
-from GeneralServerTools import getConnection, Sha1
+from GeneralServerTools import getConnection, Sha1, getTestLocations
 from threading import Thread
 from datetime import datetime
 from random import choice
@@ -15,9 +15,12 @@ class UsersDataGetter:
                 self.credentials = json.load(f)
         else:
             raise DatagetterException("mysql\\mysql_credential.json is missing, keep in mind that the folder must be in the same directory as Datagetter.py")  
-        
+        self.tests_locations = getTestLocations()
+        if not self.tests_locations :
+            raise DatagetterException("Cant get tests/testLocations.json file, be sure to this file from the Server/ directory")
         self.credentials["database"] = "interviews" # selects the database that we will work with
         self.__hasher = Sha1()
+
         self.ok = {"response":"ok"}
     
     def login(self, user, password, ip):
@@ -133,6 +136,70 @@ class UsersDataGetter:
             "msg":msg
         }
     
+    def getTestTokenInfo(self, test_token, user_id):
+        #the test_token == interview_id
+        print(f"Getting test_token info({test_token})...")
+        tests_short_names = self.__getIntervieweeNameNdTests(test_token)
+        response = {
+            'interview': test_token,
+            'interviewer': f"testToken_{test_token}",
+            'interviewee': self.getIntervieweeByInterviewID(test_token),
+            'needed_tests': self.getTestsContent(tests_short_names['tests'])
+            }
+        path_to_results = f"{self.getUserFolder(user_id)}Interviewees/{response['interviewee']}/{test_token}.json"
+        if os.path.isfile(path_to_results):
+            with open(path_to_results, 'r') as f:
+                response['cached'] = json.load(f)
+                response['cached']['interviewer'] = f"testToken_{test_token}"
+        else:
+            response['cached'] = {
+                'tests': response['needed_tests'],
+                "question_num": 1,
+                "test_num": 0,
+                "interviewee_answers": {},
+                "interviewee_stats": {},
+                "interviewee": response["interviewee"],
+                "interview": test_token,
+                "interviewer": f"testToken_{test_token}"
+            }
+        return response
+    
+    
+    def getIntervieweeByInterviewID(self, interview):
+        mysql = self.__getConnAndCursor()
+        try:
+            sql = f"SELECT applyed_to FROM interviews WHERE id='{interview}';"
+            mysql['cursor'].execute(sql)
+            result = mysql['cursor'].fetchall()
+            return result[0]['applyed_to']
+        except Exception as e:
+            print(f"Exception on getIntervieweeByInterviewID: {e}")
+        finally:
+            mysql['conn'].close()
+        
+        
+    def getTestsContent(self,  tests_short_names):
+        tests_content = []
+        for test in tests_short_names:
+            if os.path.isfile(self.tests_locations[test]):
+                with open(self.tests_locations[test], 'r') as f:
+                    tests_content.append(json.load(f))
+        return tests_content
+        
+    def getInterviewerByInterviewID(self, interview_uuid):
+        mysql = self.__getConnAndCursor()
+        print(f"looking for interviewer of '{interview_uuid}'...")
+        try:
+            mysql['cursor'].execute(f"SELECT created_by FROM interviews WHERE id='{interview_uuid}'")
+            result = mysql['cursor'].fetchall()
+            result = result[0]['created_by']
+            return result
+        except Exception as e:
+            print(f"Exception ocurred while getting the interviewer for '{interview_uuid}'\n{e}")
+            return self.getBadResponse()
+        finally:
+            mysql['conn'].close()    
+    
     def deleteIntervieweeById(self, interviewee):
         """
             Spected reasponse format:
@@ -194,7 +261,7 @@ class UsersDataGetter:
             mysql['conn'].close()
         return False
     
-    def createInterview(self, name, tests, user_id, profile):
+    def createInterview(self, name, tests, user_id, profile, is_tokenized='0'):
         """
         Spected reasponse format:
         {
@@ -221,7 +288,7 @@ class UsersDataGetter:
                 mysql = self.__getConnAndCursor()
                 try:
                     print(f'Inserting Interview \'{interview_uuid}\'...')
-                    mysql['cursor'].execute(f"INSERT INTO `interviews`(id, created_by, applyed_to, profile) VALUES ('{interview_uuid}','{user_id}','{interviewee_key}', {profile});")
+                    mysql['cursor'].execute(f"INSERT INTO `interviews`(id, created_by, applyed_to, profile, tokenized) VALUES ('{interview_uuid}','{user_id}','{interviewee_key}', {profile}, {is_tokenized});")
                     mysql['conn'].commit()
                     
                     response = {
@@ -347,6 +414,11 @@ class UsersDataGetter:
         print(f"catchTests data expect a dict with keys <{expected_params}>\n instead found:\n <{list(interview_data.keys())}>")
         return self.getBadResponse()        
     
+    def wasTokenCreated24HrsAgo(self, dt):
+        created_on = datetime.timestamp(dt)
+        now_timestamp = datetime.timestamp(datetime.now())
+        return (now_timestamp - created_on) >= 86400 
+    
     def getCatchedInterviews(self, user_id):
         """
             Gets all if any unfinished user interviews, if it finds interviews with status (in the DB)
@@ -360,7 +432,7 @@ class UsersDataGetter:
             mysql = self.__getConnAndCursor()
             print(f"Getting unfinished interviews of user {user_id}...")
             try:
-                mysql['cursor'].execute(f"SELECT id, applyed_to FROM interviews WHERE created_by={user_id} AND was_finished=0;")
+                mysql['cursor'].execute(f"SELECT id, applyed_to, tokenized, created FROM interviews WHERE created_by={user_id} AND was_finished=0;")
                 results = mysql['cursor'].fetchall()
                 if results:
                     
@@ -371,8 +443,9 @@ class UsersDataGetter:
                         path_to_cached_interview = f"{user_folder}Interviewees/{result['applyed_to']}/{result['id']}.json"
                         if not os.path.exists(path_to_cached_interview):
                             print(path_to_cached_interview)
-                            # Interview need to be deleted here
-                            self.deleteIntervieweeById(result['applyed_to'])
+                            created_on = result['created']
+                            if result['tokenized'] == 0 or (result['tokenized'] == 1 and self.wasTokenCreated24HrsAgo(created_on)):
+                                self.deleteIntervieweeById(result['applyed_to'])
                             continue
                         
                         with open(path_to_cached_interview, 'r') as f:

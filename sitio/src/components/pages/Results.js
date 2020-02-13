@@ -81,7 +81,7 @@ class Results extends Component
                     <div id="title-container">
                         <h1 className="page-title">Resultados</h1>
                     </div>
-                    <span id='back-arrow' className="white-element" onClick={() => {historial.push('/main-menu')}}>
+                    <span id='back-arrow' className="white-element" onClick={() => {historial.push('/test-menu')}}>
                         <i className="fas fa-arrow-left"></i>
                     </span>
                 </header>

@@ -83,7 +83,6 @@ class TestMenu extends Component
                     if(response.cached.length > 0)
                     {
                         this.unfinished_tests = response.cached;
-                        // console.log(JSON.stringify(this.unfinished_tests));
                         this.setState({
                             unfinished_tests: true
                         })
@@ -106,8 +105,8 @@ class TestMenu extends Component
          */
         const { profiles } = this.state;
         const select_tag = document.getElementById('test-type-selector');
-        this.selected_profile_id = profiles[select_tag.selectedIndex].profile_id
-        this.getSelectedTests(profiles[select_tag.selectedIndex].needed_tests)
+        this.selected_profile_id = profiles[select_tag.selectedIndex].profile_id;
+        this.getSelectedTests(profiles[select_tag.selectedIndex].needed_tests);
     }
 
     getSelectedTests = list => {
@@ -119,7 +118,7 @@ class TestMenu extends Component
         })
     } 
 
-    proceedToTests = async () => {
+    proceedToTests = async (e, is_tokenized=false, callback=null) => {
         
         /**
          *
@@ -127,13 +126,21 @@ class TestMenu extends Component
          * interviews page.
          */
         const interviewee_name = document.getElementById('nombre-input').value;
-        const { list_needed_tests } = this.state;
+        let { list_needed_tests } = this.state;
+        if(list_needed_tests.length === 0 && this.state.profiles.length > 0)
+        {
+            const { profiles } = this.state;
+            const select_tag = document.getElementById('test-type-selector');
+            this.selected_profile_id = profiles[select_tag.selectedIndex].profile_id;
+            list_needed_tests = profiles[select_tag.selectedIndex].needed_tests;
+        }
         if (interviewee_name.length > 0 && list_needed_tests.length > 0)
         {
             this.props.clearUTdata();
             let forma = new FormData();
             forma.append('name',interviewee_name);
             forma.append('needed',JSON.stringify(list_needed_tests));
+            forma.append('tokenized', is_tokenized ? 1 : 0);
             forma.append('user_id', this.props.user.user_id);
             forma.append('profile_id', this.selected_profile_id);
             let request = new Request(`${server_name}createNewInterview`,{method: 'POST',body:forma});
@@ -144,13 +151,22 @@ class TestMenu extends Component
                         if(!result.error)
                         {
                             this.props.setInterviewee(result.tests,namer_tag,result.interviewee_key,result.interview_key);
-                            historial.push('/interviews');
+                            if(!is_tokenized)
+                            {
+                                historial.push('/interviews');
+                            }
+                            console.log(callback)
+                            if(callback !== null)
+                            {
+                                callback(result.interview_key);
+                            }
                         }
                     })
         }
-        
-        
-        
+        else
+        {
+            alert('Informacion de entrevista faltante')
+        }
     }
 
     showUtsModal = () => {
@@ -177,7 +193,7 @@ class TestMenu extends Component
         const element = document.getElementById('settings-nav-background');
         if(element !== undefined)
         {
-            element.style.display = 'block';
+            element.style.display = 'flex';
         }
     }
 
@@ -209,12 +225,11 @@ class TestMenu extends Component
         return(
             <React.Fragment>
                 <CreateNewProfile callback={this.requestUserProfiles} />
-                <SettingsNavModal />
+                <SettingsNavModal intervieweeCreator={this.proceedToTests}/>
                 <UTModal hiddingCallback={this.showUtsModal} uts={this.unfinished_tests} callback={this.resumeUT} />
                 {/* <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} /> */}
                 <div id='main-container'>
                     <div id="tests-menu-controls">
-                        <span onClick={this.backArrowHandler} id='back-arrow'><i className="fas fa-arrow-left"></i></span>
                         <span onClick={this.openUserSettingsNav} id='settings-btn'><i className="fas fa-user-cog"></i></span>
                     </div>
                     <div id="options-page" className="non-vertical">

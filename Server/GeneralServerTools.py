@@ -207,7 +207,13 @@ def insertStatsMeasuerd(insert=False):
     conn.close()                    
     return response
             
-
+def getTestLocations():
+    test_locations_path = 'operational_data/testLocations.json'
+    if os.path.exists(test_locations_path):
+        with open(test_locations_path, 'r') as f:
+            return json.load(f)
+    return None
+        
 
 
 
