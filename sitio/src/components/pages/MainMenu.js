@@ -5,7 +5,14 @@ import historial from '../historial';
 
 class MainMenu extends Component
 {
-
+    
+    /**
+     *
+     * En desuso
+     *
+     */
+    
+    
     cuestionariosHandler = e => {
         historial.push('/test-menu')
     }

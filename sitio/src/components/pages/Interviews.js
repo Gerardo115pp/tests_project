@@ -140,7 +140,7 @@ class Interviews extends Component {
         {
             results = this.interviewee_answers[question_code];
             mide = results.mide;
-            this.interviewee_stats[this.test_obj.name][mide] = (this.interviewee_stats[mide]!==undefined) ? this.interviewee_stats[mide]+results.value : results.value;
+            this.interviewee_stats[this.test_obj.name][mide] = (this.interviewee_stats[this.test_obj.name][mide]!==undefined) ? this.interviewee_stats[this.test_obj.name][mide]+results.value : results.value;
         }
         this.interviewee_answers = {};
         console.log(JSON.stringify(this.interviewee_stats));

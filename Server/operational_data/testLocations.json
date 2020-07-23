@@ -18,5 +18,6 @@
     "BEQ": "./tests/C2/BEQ.json",
     "ERQ": "./tests/C2/ERQ.json",
     "SOC3": "./tests/C2/SOC3.json",
-    "GHQ28": "./tests/D1/GHQ28.json"
+    "GHQ28": "./tests/D1/GHQ28.json",
+    "WURS": "./tests/B2/WURS.json"
 }

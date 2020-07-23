@@ -14,10 +14,33 @@ tokens_data = {} #contains the users that created the test-tokes {test-token: us
 
 CORS(app)
 
+#=====================================
+#
+#           Admintools
+#
+#=====================================
+
+@app.route('/receive-test', methods=['POST'])
+def addTest():
+    #
+    #   test data must include: test, key, file_name, type, fullname, length, stats
+    #
+    if request.method == "POST":
+        test_data = json.loads(request.form['test_data'])
+        testhash = hasher.get_hash(test_data['test'])
+        if testhash == test_data['key']: 
+            return user_data_getter.addTest(test_data)
+    return user_data_getter.getBadResponse()
+        
+
+
+#End of Admintools
+
 def changeTokenUser(token_user):
     if type(token_user).__name__ == 'str':
         if token_users_regex.match(token_user):
             token_user = token_user.split('_')[1]
+    print(f"token: {token_user}")
     return token_user
 
 @app.route('/validateUserToken',methods=['POST'])
@@ -77,9 +100,9 @@ def catchUnfinishedTest():
     if request.method == 'POST':
         interview_data = json.loads(request.form['interview_data'])
         test_token = changeTokenUser(interview_data['interviewer'])
-        if test_token not in tokens_data:
+        if test_token not in tokens_data and type(test_token).__name__ == 'str':
             tokens_data[test_token] = user_data_getter.getInterviewerByInterviewID(test_token)
-        interview_data['interviewer'] = tokens_data[test_token]
+            interview_data['interviewer'] = tokens_data[test_token]
         return user_data_getter.catchTest(interview_data)
 
 @app.route('/getCatchedInterviews', methods=['POST'])

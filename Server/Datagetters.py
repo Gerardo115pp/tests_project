@@ -10,8 +10,10 @@ class DatagetterException(Exception):
 
 class UsersDataGetter:
     def __init__(self):
-        if os.path.exists('mysql\\mysql_credential.json'):
-            with open('mysql\\mysql_credential.json','r') as f:
+        if not os.path.exists('users'):
+            os.mkdir("users")
+        if os.path.exists('mysql/mysql_credential.json'):
+            with open('mysql/mysql_credential.json','r') as f:
                 self.credentials = json.load(f)
         else:
             raise DatagetterException("mysql\\mysql_credential.json is missing, keep in mind that the folder must be in the same directory as Datagetter.py")  
@@ -22,6 +24,53 @@ class UsersDataGetter:
         self.__hasher = Sha1()
 
         self.ok = {"response":"ok"}
+    
+    def addTest(self, test_data):
+        print(f"adding test '{test_data['fullname']}'...")
+        if not os.path.exists(f"./tests/{test_data['type']}"):
+            print(f"test type '{test_data['type']}' does not exists...")
+            return self.getBadResponse()
+        fullpath = f"./tests/{test_data['type']}/{test_data['file_name']}.json" 
+        assert type(test_data['test']) == str
+        with open(fullpath, 'w') as f:
+            f.write(test_data['test'])
+        print("adding test to dictionary and locations...", end='\t')
+        self.addTestToDictyonary(test_data['fullname'], test_data['file_name'])
+        self.addTestToLocations(test_data['file_name'], fullpath)
+        print("Succeded!")
+        mysql = self.__getConnAndCursor()
+        try:
+            mysql['cursor'].execute(f"INSERT INTO tests(id, short_name, full_name, length, path) VALUES (NULL, '{test_data['file_name']}', '{test_data['fullname']}', {test_data['length']}, '{fullpath.replace('//', '////')}');")
+            test_id = mysql['cursor'].lastrowid
+            mysql['conn'].commit()
+            for stat in test_data['stats']:
+                mysql['cursor'].execute(f"INSERT stats(id, name) VALUES (NULL, '{stat}');")
+                stat_id = mysql['cursor'].lastrowid
+                mysql['cursor'].execute(f'INSERT testsstats(stat, test) VALUES ({stat_id}, {test_id});')
+            mysql['conn'].commit()
+            return self.ok
+        except Exception as e:
+            print(f"An exception ocurred while inserting test '{test_data['file_name']}': {e}")
+            return self.getBadResponse()
+        finally:
+            mysql['conn'].close()
+            
+        
+            
+            
+    def addTestToDictyonary(self, fullname, shortname):
+        with open("./operational_data/testDictyonary.json", 'r') as f:
+            dictionary = json.load(f)
+        dictionary[fullname] = shortname
+        with open("./operational_data/testDictyonary.json", 'w') as f:
+            json.dump(dictionary, f)
+
+    
+    def addTestToLocations(self, shortname, path):
+        self.tests_locations[shortname] = path
+        with open("./operational_data/testLocations.json", 'w') as f:
+            json.dump(self.tests_locations, f) 
+    
     
     def login(self, user, password, ip):
             """
@@ -164,7 +213,6 @@ class UsersDataGetter:
             }
         return response
     
-    
     def getIntervieweeByInterviewID(self, interview):
         mysql = self.__getConnAndCursor()
         try:
@@ -176,8 +224,7 @@ class UsersDataGetter:
             print(f"Exception on getIntervieweeByInterviewID: {e}")
         finally:
             mysql['conn'].close()
-        
-        
+            
     def getTestsContent(self,  tests_short_names):
         tests_content = []
         for test in tests_short_names:
@@ -190,7 +237,7 @@ class UsersDataGetter:
         mysql = self.__getConnAndCursor()
         print(f"looking for interviewer of '{interview_uuid}'...")
         try:
-            mysql['cursor'].execute(f"SELECT created_by FROM interviews WHERE id='{interview_uuid}'")
+            mysql['cursor'].execute(f"SELECT created_by FROM interviews WHERE id='{interview_uuid}';")
             result = mysql['cursor'].fetchall()
             result = result[0]['created_by']
             return result
@@ -331,11 +378,11 @@ class UsersDataGetter:
         interviewee_key = self.__hasher.get_hash(name+datetime.today().strftime('%f'))
         try:
             data_folder = self.getUserFolder(user_id)
-            if not os.path.exists(f"{data_folder}interviewees/{interviewee_key}"):
-                os.mkdir(f"{data_folder}interviewees/{interviewee_key}")
+            if not os.path.exists(f"{data_folder}Interviewees/{interviewee_key}"):
+                os.mkdir(f"{data_folder}Interviewees/{interviewee_key}")
             
             print(f'inserting interviewee {interviewee_key}...')
-            sql = f"INSERT INTO Interviewees(id,name,interviewer) VALUES ('{interviewee_key}','{name}',{user_id});"
+            sql = f"INSERT INTO interviewees(id,name,interviewer) VALUES ('{interviewee_key}','{name}',{user_id});"
             mysql['cursor'].execute(sql)
             mysql['conn'].commit()
         except Exception as e:
@@ -386,6 +433,8 @@ class UsersDataGetter:
         data_folder = mysql['cursor'].fetchall()
         if len(data_folder):
             data_folder = data_folder[0]['data_folder']
+            if not os.path.exists(data_folder):
+                os.mkdir(data_folder)
         else:
             raise DatagetterException('Error while try to get data_folder: invalid id was given')
         mysql['conn'].close()
