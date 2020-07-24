@@ -1,4 +1,5 @@
 from GeneralServerTools import getConnection, Sha1, getTestLocations
+from mysql.connector.errors import ProgrammingError
 from threading import Thread
 from datetime import datetime
 from random import choice
@@ -10,6 +11,7 @@ class DatagetterException(Exception):
 
 class UsersDataGetter:
     def __init__(self):
+        self.logger = DataLogger()
         if not os.path.exists('users'):
             os.mkdir("users")
         if os.path.exists('mysql/mysql_credential.json'):
@@ -21,23 +23,24 @@ class UsersDataGetter:
         if not self.tests_locations :
             raise DatagetterException("Cant get tests/testLocations.json file, be sure to this file from the Server/ directory")
         self.credentials["database"] = "interviews" # selects the database that we will work with
+        self.days_test_tokens = 7 #how many days a test_token will be available for usage 
         self.__hasher = Sha1()
 
         self.ok = {"response":"ok"}
     
     def addTest(self, test_data):
-        print(f"adding test '{test_data['fullname']}'...")
+        self.logger.log(f"adding test '{test_data['fullname']}'...")
         if not os.path.exists(f"./tests/{test_data['type']}"):
-            print(f"test type '{test_data['type']}' does not exists...")
+            self.logger.log(f"test type '{test_data['type']}' does not exists...", is_error=True)
             return self.getBadResponse()
         fullpath = f"./tests/{test_data['type']}/{test_data['file_name']}.json" 
         assert type(test_data['test']) == str
         with open(fullpath, 'w') as f:
             f.write(test_data['test'])
-        print("adding test to dictionary and locations...", end='\t')
+        self.logger.log("adding test to dictionary and locations...", end='\t')
         self.addTestToDictyonary(test_data['fullname'], test_data['file_name'])
         self.addTestToLocations(test_data['file_name'], fullpath)
-        print("Succeded!")
+        self.logger.log("Succeded!")
         mysql = self.__getConnAndCursor()
         try:
             mysql['cursor'].execute(f"INSERT INTO tests(id, short_name, full_name, length, path) VALUES (NULL, '{test_data['file_name']}', '{test_data['fullname']}', {test_data['length']}, '{fullpath.replace('//', '////')}');")
@@ -50,7 +53,7 @@ class UsersDataGetter:
             mysql['conn'].commit()
             return self.ok
         except Exception as e:
-            print(f"An exception ocurred while inserting test '{test_data['file_name']}': {e}")
+            self.logger.log(f"An exception ocurred while inserting test '{test_data['file_name']}': {e}", is_error=True)
             return self.getBadResponse()
         finally:
             mysql['conn'].close()
@@ -77,6 +80,7 @@ class UsersDataGetter:
                 confirms if the user password is correct (obviusly), and if true returns the
                 primary key of the user and a token that is composed by its user name and ip address.  
             """
+            self.logger.log(f"login user '{user}' with password '{password}' from {ip}", loud=False)
             mysql = self.__getConnAndCursor()
             try:
                 hsh = self.__hasher.get_hash(password)
@@ -94,7 +98,7 @@ class UsersDataGetter:
                     else:
                         return {'response':'wrong'}
             except Exception as e:
-                print(f"Error({e})")
+                self.logger.log(f"Error while logging in ({e})", is_error=True)
             finally:
                 mysql["conn"].close()
     
@@ -109,7 +113,7 @@ class UsersDataGetter:
                     interview_key_n
                 }}
         """
-        print(f"Getting Interviews of user with id '{user_id}'...")
+        self.logger.log(f"Getting Interviews of user with id '{user_id}'...")
         mysql = self.__getConnAndCursor()
         try:
             sql = f"SELECT interviews.id as interview, interviewees.name, interviewees.id as interviewee, profiles.path_to_file as profile FROM interviews, interviewees, profiles WHERE interviews.applyed_to=interviewees.id AND interviews.created_by={user_id} AND interviews.was_finished=1 AND profiles.id=interviews.profile;"
@@ -123,7 +127,7 @@ class UsersDataGetter:
                     data_string = data_string.replace('\\n', '')
                     response['test_interview'] = json.loads(data_string)
                 for result in results:
-                    print(f"Getting results of interview '{result['interview']}'...")
+                    self.logger.log(f"Getting results of interview '{result['interview']}'...")
                     path_to_results = f"{user_folder}Interviewees/{result['interviewee']}/{result['interview']}.json"
                     result_content = {}
                     
@@ -133,7 +137,7 @@ class UsersDataGetter:
                             data_string = data_string.replace("\\n", "")
                             result_content = json.loads(data_string)
                     else:
-                        print(f"no results found for '{result['interview']}'")
+                        self.logger.log(f"no results found for '{result['interview']}'")
  
                     #getting the profile that was used for this interview
                     if os.path.exists(result["profile"]):
@@ -142,7 +146,7 @@ class UsersDataGetter:
                             data_string = data_string.replace("\\n", "")
                             profile = json.loads(data_string)                  
                     else:
-                        print(f"profile file path not found: '{result['profile']}'")
+                        self.logger.log(f"profile file path not found: '{result['profile']}'", is_error=True)
                         return self.getBadResponse()
                     
                     if not result_content:
@@ -156,12 +160,12 @@ class UsersDataGetter:
                     }
                 return response
             else:
-                print(f"Failure on query: {sql}")
+                self.logger.log(f"Failure on query: {sql}", is_error=True)
                 return response
             
         except Exception as e:
-            print(f"Error while getting the results for '{user_id}': {e}")
-            return self.getBadResponse()
+            self.logger.log(f"Error while getting the results for '{user_id}': {e}", is_error=True)
+            raise e
         finally:
             mysql["conn"].close()
             
@@ -187,7 +191,7 @@ class UsersDataGetter:
     
     def getTestTokenInfo(self, test_token, user_id):
         #the test_token == interview_id
-        print(f"Getting test_token info({test_token})...")
+        self.logger.log(f"Getting test_token info({test_token})...")
         tests_short_names = self.__getIntervieweeNameNdTests(test_token)
         response = {
             'interview': test_token,
@@ -221,7 +225,7 @@ class UsersDataGetter:
             result = mysql['cursor'].fetchall()
             return result[0]['applyed_to']
         except Exception as e:
-            print(f"Exception on getIntervieweeByInterviewID: {e}")
+            self.logger.log(f"Exception on getIntervieweeByInterviewID: {e}", is_error=True)
         finally:
             mysql['conn'].close()
             
@@ -235,14 +239,14 @@ class UsersDataGetter:
         
     def getInterviewerByInterviewID(self, interview_uuid):
         mysql = self.__getConnAndCursor()
-        print(f"looking for interviewer of '{interview_uuid}'...")
+        self.logger.log(f"looking for interviewer of '{interview_uuid}'...")
         try:
             mysql['cursor'].execute(f"SELECT created_by FROM interviews WHERE id='{interview_uuid}';")
             result = mysql['cursor'].fetchall()
             result = result[0]['created_by']
             return result
         except Exception as e:
-            print(f"Exception ocurred while getting the interviewer for '{interview_uuid}'\n{e}")
+            self.logger.log(f"Exception ocurred while getting the interviewer for '{interview_uuid}'\n{e}", is_error=True)
             return self.getBadResponse()
         finally:
             mysql['conn'].close()    
@@ -252,7 +256,7 @@ class UsersDataGetter:
             Spected reasponse format:
                 {response:"standar response"}
         """
-        print(f"Deleting {interviewee}...")
+        self.logger.log(f"Deleting interviewee '{interviewee}'...")
         if re.match(r"^[a-z\d]{40}",interviewee):
             mysql = self.__getConnAndCursor()
         
@@ -260,7 +264,7 @@ class UsersDataGetter:
                 mysql['cursor'].execute(f"SELECT * FROM interviews WHERE applyed_to='{interviewee}';")
                 interviews = mysql['cursor'].fetchall()
                 if interviews:
-                    print(f"Deleting {len(interviews)} interviews...")
+                    self.logger.log(f"Deleting {len(interviews)} interviews...")
                     for interview in interviews:
                         if not self.deleteITbyInterviewId(interview['id']):
                             return self.getBadResponse("failed to delete ITs")
@@ -280,7 +284,7 @@ class UsersDataGetter:
                 mysql['cursor'].execute(f"DELETE FROM interviewees WHERE id='{interviewee}' LIMIT 1;")
                 mysql["conn"].commit()
             except Exception as e:
-                print(f"Error while deleting interviewee: {e}")
+                self.logger.log(f"Error while deleting interviewee: {e}", is_error=True)
                 return self.getBadResponse()
             finally:
                 mysql["conn"].close()            
@@ -288,7 +292,7 @@ class UsersDataGetter:
             return self.ok
             
         else:
-            print("delete process failed...")
+            self.logger.log("delete process failed...")
             return self.getBadResponse(f"no interviewee with id '{interviewee}' was found")  
 
     def deleteITbyInterviewId(self, interview_id):
@@ -298,12 +302,12 @@ class UsersDataGetter:
         """
         mysql = self.__getConnAndCursor()
         try:
-            print(f"Deleting ITs of '{interview_id}'...")
+            self.logger.log(f"Deleting ITs of '{interview_id}'...")
             mysql['cursor'].execute(f"DELETE FROM interviewstests WHERE interview='{interview_id}';")
             mysql['conn'].commit()
             return True
         except Exception as e:
-            print(f"Error while deleting IT: {e}")
+            self.logger.log(f"Error while deleting IT: {e}", is_error=True)
         finally:
             mysql['conn'].close()
         return False
@@ -320,7 +324,7 @@ class UsersDataGetter:
         if type(tests).__name__ == 'list' and name and len(tests):
             interviewee_key = self.createInterviewee(name,user_id)
             sql = ""
-            print(f"{interviewee_key} requested for tests: {tests}")
+            self.logger.log(f"{interviewee_key} requested for tests: {tests}")
             if interviewee_key:
                 
                 if os.path.exists('operational_data/testLocations.json'):
@@ -328,13 +332,16 @@ class UsersDataGetter:
                         tests_locations = json.load(f)
                 else:
                     self.deleteIntervieweeById(interviewee_key)
-                    print("unable to locate 'testLocations.json'")
+                    self.logger.log("unable to locate 'testLocations.json'")
                     return self.getBadResponse()
                 
                 interview_uuid = self.__hasher.get_hash(name+datetime.today().strftime('%f')+choice(tests))
+                print(f"token: {is_tokenized}")
+                if int(is_tokenized) == 1:
+                    self.logger.log(f"creating token for interviewee '{name}'\n\tcreate by interviewer {user_id}\n\t token = {interview_uuid}", loud=False)
                 mysql = self.__getConnAndCursor()
                 try:
-                    print(f'Inserting Interview \'{interview_uuid}\'...')
+                    self.logger.log(f'Inserting Interview \'{interview_uuid}\'...')
                     mysql['cursor'].execute(f"INSERT INTO `interviews`(id, created_by, applyed_to, profile, tokenized) VALUES ('{interview_uuid}','{user_id}','{interviewee_key}', {profile}, {is_tokenized});")
                     mysql['conn'].commit()
                     
@@ -352,22 +359,22 @@ class UsersDataGetter:
                             mysql['cursor'].execute(sql)
                             mysql['conn'].commit()
                         else:
-                            print(f"unable to locate test '{test}' in path '{test_path}'")
+                            self.logger.log(f"unable to locate test '{test}' in path '{test_path}'")
                             continue
                         
                 except Exception as e:
-                    print(e)
+                    self.logger.log(e, is_error=True)
                     if sql:
-                        print(f"Current query: {sql}")
+                        self.logger.log(f"Current query: {sql}")
                     response = self.getBadResponse()
                 finally:
                     mysql['conn'].close()    
                 return response
         else:
             if type(tests).__name__ != 'list':
-                print(f'parameter \'test\' must be of type \'list\' but instead got \'{type(test).__name__}\'')
+                self.logger.log(f'parameter \'test\' must be of type \'list\' but instead got \'{type(test).__name__}\'')
             else:
-                print("got empty parameters")
+                self.logger.log("got empty parameters")
             return self.getBadResponse()
             
     def createInterviewee(self, name, user_id):
@@ -381,12 +388,12 @@ class UsersDataGetter:
             if not os.path.exists(f"{data_folder}Interviewees/{interviewee_key}"):
                 os.mkdir(f"{data_folder}Interviewees/{interviewee_key}")
             
-            print(f'inserting interviewee {interviewee_key}...')
+            self.logger.log(f'inserting interviewee {interviewee_key}...')
             sql = f"INSERT INTO interviewees(id,name,interviewer) VALUES ('{interviewee_key}','{name}',{user_id});"
             mysql['cursor'].execute(sql)
             mysql['conn'].commit()
         except Exception as e:
-            print(f"error while creating interviewee: {e}")
+            self.logger.log(f"error while creating interviewee: {e}", is_error=True)
         finally:
             mysql['conn'].close()
             return interviewee_key
@@ -398,7 +405,8 @@ class UsersDataGetter:
             Spected reasponse format:
                 {response:"standar response"}
         """
-        print(f"Updateing results for {interview_id}")
+        self.logger.log(f"Updateing results for {interview_id}")
+        self.doManualBackUp(results, interview_id)
         mysql = self.__getConnAndCursor()
         try:
             mysql['cursor'].execute(f"SELECT * FROM interviews WHERE id='{interview_id}';")
@@ -418,16 +426,41 @@ class UsersDataGetter:
                 mysql['conn'].commit()
                 return self.ok
             else:
-                print(f"Warning: trying to update results of unknwon Interview '{interview_id}'")
+                self.logger.log(f"Warning: trying to update results of unknwon Interview '{interview_id}'")
                 return self.getBadResponse()
             
         except Exception as e:
-            print(e)
+            self.logger.log(e, is_error=True)
             return self.getBadResponse()
         finally:
             mysql['conn'].close()
 
+    def isTestTokenValid(self, test_token):
+        if type(test_token) != str:
+            return False
+        return re.match(r'testToken_[a-z\d]+$', test_token)
+
+    def __getUserIdFromTT(self, test_token):
+        """
+            returns the user id that created a test_token. the test token is based on the interview id which
+            has a 'create_by' column.
+        """
+        assert self.isTestTokenValid(test_token)
+        test_token = test_token.split('_')[1]
+        mysql = self.__getConnAndCursor()
+        try:
+            mysql['cursor'].execute(f"SELECT created_by FROM interviews WHERE id='{test_token}';")
+            user_id = mysql['cursor'].fetchall()[0]['created_by']
+            return user_id
+        except ProgrammingError as e:
+            self.logger.log(f"error while trying to get user id from test_token '{test_token}':", is_error=True)
+            raise e
+        finally:
+            mysql['conn'].close()
+
     def getUserFolder(self, user_id):
+        if self.isTestTokenValid(user_id):
+            user_id = self.__getUserIdFromTT(user_id)
         mysql = self.__getConnAndCursor()
         mysql['cursor'].execute(f'SELECT data_folder FROM users WHERE id={user_id};')
         data_folder = mysql['cursor'].fetchall()
@@ -440,6 +473,16 @@ class UsersDataGetter:
         mysql['conn'].close()
         return data_folder
 
+    def isInterviewFinished(self, interview_uuid):
+        mysql = self.__getConnAndCursor()
+        try:
+            mysql['cursor'].execute(f"SELECT was_finished FROM interviews WHERE id='{interview_uuid}';")
+            return bool(mysql['cursor'].fetchall()[0]['was_finished'])
+        except ProgrammingError as e:
+            raise e
+        finally:
+            mysql['conn'].close()
+
     def catchTest(self, interview_data):
         """
         
@@ -451,22 +494,37 @@ class UsersDataGetter:
         """
         expected_params = ['tests', 'question_num', 'test_num', 'interviewee_answers', 'interviewee_stats', 'interviewee', 'interview', 'interviewer']
         if expected_params == list(interview_data.keys()):
+            if self.isInterviewFinished(interview_data['interview']):
+                self.logger.log(f"cannot catch '{interview_data['interview']}' results because the interview is already compleated...", is_error=True)
+                return self.ok
             # print(f"catching ongoing interview with interview data:\n{interview_data}")
+            self.doManualBackUp(interview_data, interview_data['interviewer'])
             path_to_results = f"{self.getUserFolder(interview_data['interviewer'])}Interviewees/{interview_data['interviewee']}/"
             if not os.path.exists(path_to_results):
                 os.mkdir(path_to_results)
                 
             with open(f"{path_to_results+interview_data['interview']}.json", 'w') as f:
                 json.dump(interview_data,f)
-            print(f'Success on catching interview {interview_data["interview"]}')
+            self.logger.log(f'Success on catching interview {interview_data["interview"]}')
             return self.ok
-        print(f"catchTests data expect a dict with keys <{expected_params}>\n instead found:\n <{list(interview_data.keys())}>")
+        self.logger.log(f"catchTests data expect a dict with keys <{expected_params}>\n instead found:\n <{list(interview_data.keys())}>", is_error=True)
         return self.getBadResponse()        
     
-    def wasTokenCreated24HrsAgo(self, dt):
+    def doManualBackUp(self, json_data, backup_name):
+        """
+            does a manual backup of any and all results or ungoing tests, the only way any of this get deleted is by manual deletion.
+            
+            no info of this backups is stored and they are not used anywhere else in the system.
+        """
+        if not os.path.exists(f"manual_backups"):
+            os.mkdir('manual_backups')
+        with open(f'./manual_backups/{backup_name}.json', 'w') as f:
+            json.dump(json_data, f)
+            
+    def isTestTokenStillAvailable(self, dt):
         created_on = datetime.timestamp(dt)
         now_timestamp = datetime.timestamp(datetime.now())
-        return (now_timestamp - created_on) >= 86400 
+        return (now_timestamp - created_on) >= (86400 * self.days_test_tokens)
     
     def getCatchedInterviews(self, user_id):
         """
@@ -479,7 +537,7 @@ class UsersDataGetter:
         """
         if self.validateUserId(user_id):
             mysql = self.__getConnAndCursor()
-            print(f"Getting unfinished interviews of user {user_id}...")
+            self.logger.log(f"Getting unfinished interviews of user {user_id}...")
             try:
                 mysql['cursor'].execute(f"SELECT id, applyed_to, tokenized, created FROM interviews WHERE created_by={user_id} AND was_finished=0;")
                 results = mysql['cursor'].fetchall()
@@ -491,9 +549,9 @@ class UsersDataGetter:
                     for result in results:
                         path_to_cached_interview = f"{user_folder}Interviewees/{result['applyed_to']}/{result['id']}.json"
                         if not os.path.exists(path_to_cached_interview):
-                            print(path_to_cached_interview)
+                            self.logger.log(path_to_cached_interview)
                             created_on = result['created']
-                            if result['tokenized'] == 0 or (result['tokenized'] == 1 and self.wasTokenCreated24HrsAgo(created_on)):
+                            if result['tokenized'] == 0 or (result['tokenized'] == 1 and self.isTestTokenStillAvailable(created_on)):
                                 self.deleteIntervieweeById(result['applyed_to'])
                             continue
                         
@@ -504,18 +562,18 @@ class UsersDataGetter:
                         cached_data["tests_names"] = additional_data["tests"]
                         response['cached'].append(cached_data)
                     
-                    print(f"Got {len(response['cached'])} unfinished interview...")
+                    self.logger.log(f"Got {len(response['cached'])} unfinished interview...")
                     return response                    
                 else:
-                    print(f"no unfinished interviews by user '{user_id}'...")
+                    self.logger.log(f"no unfinished interviews by user '{user_id}'...")
                     return {'cached':[]}
             except Exception as e:
-                print(e)
+                self.logger.log(e, is_error=True)
                 return self.getBadResponse()
             finally:
                 mysql['conn'].close()
         else:
-            print(f"user id '{user_id}' is not valid!")
+            self.logger.log(f"user id '{user_id}' is not valid!", is_error=True)
             return self.getBadResponse()
         
     def __getIntervieweeNameNdTests(self, interview_id):
@@ -536,7 +594,7 @@ class UsersDataGetter:
             else:
                  raise DatagetterException(f"Error on query: {sql}\nreturned {results}")
         except Exception as e:
-            print(e)
+            self.logger.log(e, is_error=True)
             return False
         finally:
             mysql['conn'].close()
@@ -554,26 +612,26 @@ class UsersDataGetter:
                 mysql["cursor"].execute(sql)
                 results = mysql["cursor"].fetchall()
                 if not results:
-                    print(f"WARNING: got no results from query:\n\t '{sql}'")
+                    self.logger.log(f"WARNING: got no results from query:\n\t '{sql}'")
                 return {
                         "response":"ok",
                         "attribs": [a["name"] for a in results]
                         }
                 
             except Exception as e:
-                print(f"Error while getting attributes for '{short_name}': {e}")
+                self.logger.log(f"Error while getting attributes for '{short_name}': {e}", is_error=True)
                 return self.getBadResponse()
             finally:
                 mysql["conn"].close()
         else:
-            print(f"got invalid request for attributes of tests '{short_name}'")
+            self.logger.log(f"got invalid request for attributes of tests '{short_name}'")
             return self.getBadResponse()
         
     def saveNewProfile(self, profile_data, user):
         try:
             profile_data = json.loads(profile_data)
         except json.JSONDecodeError as e:
-            print(f"An error ocurred while tying to parse profile values:\n{e}")
+            self.logger.log(f"An error ocurred while tying to parse profile values:\n{e}", is_error=True)
             return self.getBadResponse()
         if list(profile_data.keys()) == ['name', 'values']:
             profiles_folder = f"{self.getUserFolder(user)}profiles"
@@ -590,7 +648,7 @@ class UsersDataGetter:
                 mysql["cursor"].execute(f"INSERT INTO profiles(id, name, path_to_file, creator) VALUES (NULL, '{profile_data['name']}', '{path_to_file}', {user});")
                 mysql["conn"].commit()
             except Exception as e:
-                print(f"an error occured while trying to inert profile on the database:\n{e}")
+                self.logger.log(f"an error occured while trying to inert profile on the database:\n{e}", is_error=True)
                 return self.getBadResponse()
             finally:
                 mysql["conn"].close()
@@ -617,14 +675,50 @@ class UsersDataGetter:
                     return {"response": "ok", "profiles": profiles}
 
                 else:
-                    print(f"no profiles where found for user {user_id}")
+                    self.logger.log(f"no profiles where found for user {user_id}")
                     return self.getBadResponse("No has creado ningun perfil aun")
             except Exception as e:
-                print(f"getUserProfile: {e}")
+                self.logger.log(f"getUserProfile: {e}", is_error=True)
                 return self.getBadResponse()
             finally:
                 mysql["conn"].close()
         else:
-            print(f"getUserProfile: invalid user_id '{user_id}'")
+            self.logger.log(f"getUserProfile: invalid user_id '{user_id}'", is_error=True)
             return self.getBadResponse()
-         
+   
+class DataLogger:
+    def __init__(self):
+        self.logs_location = './data_logs'
+        self.__stacked_logs = ""
+        if not os.path.exists(self.logs_location):
+            os.mkdir(self.logs_location)
+        
+    def getCurrentLogName(self):
+        return datetime.now().strftime(f"{self.logs_location}/%d-%m-%Y.log")
+
+    def log(self, msg, loud=True, is_error=False, endswith='\n'):
+        assert type(msg) == str
+        if loud:
+            print(msg, end=endswith)
+        msg = self.__createLog(msg, is_error, endswith)
+        with open(self.getCurrentLogName(), 'a') as f:
+            f.write(msg)
+
+    def __createLog(self, msg, is_error=False, endswith='\n'):
+        log_data = f"[{datetime.now().strftime('%H:%M:%S:%f %p')}]"
+        log_data+=  "[###ERROR###]\t" if is_error else "\t"
+        msg = log_data + msg + endswith
+        return msg
+
+    def stackLog(self, msg, is_error=False, endswith='\n'):
+        self.__stacked_logs += self.__createLog(msg, is_error, endswith)
+    
+    def popLogs(self, loud=True):
+        if loud:
+            print(self.__stacked_logs)
+        with open(self.getCurrentLogName(), "a") as f:
+            f.write(self.__stacked_logs)
+        self.stackLog = ""
+        
+        
+        

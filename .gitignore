@@ -34,7 +34,9 @@ Server/mysql
 
 # Python
 Server/__pycache__/*
-
+Server/manual_backups/
+Server/data_logs/
 Docs
+
 
 DB_LocalBackups/
