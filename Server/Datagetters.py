@@ -411,6 +411,8 @@ class UsersDataGetter:
         try:
             mysql['cursor'].execute(f"SELECT * FROM interviews WHERE id='{interview_id}';")
             interview_data = mysql["cursor"].fetchall()
+            mysql["cursor"].execute(f"UPDATE interviews SET was_finished=1 WHERE id='{interview_id}';")
+            mysql['conn'].commit()
             if interview_data:
                 interview_data = interview_data[0]
                 interviewer_folder_data = self.getUserFolder(interview_data['created_by'])
@@ -422,8 +424,6 @@ class UsersDataGetter:
                 with open(f"{interviewee_directory+interview_id}.json", 'w') as f:
                     json.dump(results,f)
                     
-                mysql["cursor"].execute(f"UPDATE interviews SET was_finished=1 WHERE id='{interview_id}';")
-                mysql['conn'].commit()
                 return self.ok
             else:
                 self.logger.log(f"Warning: trying to update results of unknwon Interview '{interview_id}'")

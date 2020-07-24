@@ -52,8 +52,10 @@
 
 #uts-container{
     font-family: 'Roboto Condensed';
+    overflow-y: auto;
     width: 70%;
     height: 20rem;
+    max-height: 20rem;
     margin-bottom: 6%;
     border-right: 1px solid var(--grey);
     border-left: 1px solid var(--grey);

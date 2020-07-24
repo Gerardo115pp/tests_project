@@ -159,12 +159,13 @@ span.results-title-text{
 
 #results-stats-container{
     height: 70%;
+    width: 90%;
     overflow-y: auto;
     font-family: "Blinker";
     font-size: 1.2rem;
     color: var(--dark-grey);
     border-top: 2px solid var(--dark-grey);
-    margin-top: 7%;
+    margin: 7% auto 0;
     padding: 5% 0;
 }
 
@@ -174,19 +175,22 @@ span.results-title-text{
 .rdd-attrib-container{
     background: var(--light-grey);
     color: var(--cyan-clicked);
+    margin: 0.3rem 0 0.3rem 0;
+    padding: 1% 0% 2%;
+    border-bottom: 1px solid var(--sub-section);
 }
 
 
 .rdd-title-container{
     cursor: pointer;
     display: flex;
-    height: 3rem;
+    height: 100%;
     align-items: center;
     font-size: 1.2rem;
     transition: all .3s ease-in;   
 }
 
-.rdd-title-container:hover{
+.rdd-attrib-container:hover{
     background: rgba(255, 255, 255, 0.9);
 }
 
@@ -200,6 +204,7 @@ span.results-title-text{
 
 .rdd-stats-container{
     display: none;
+    overflow-y: auto;
     background: var(--cyan);
     max-height: 15rem;
     color: var(--dark-grey);
