@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 import ResultBox from '../ResultBox';
 import ResultsSideBar from '../ResultsSideBar';
 import historial from '../historial';
-import * as userActions from '../../actions/userActions';
 import * as resultsActions from '../../actions/resultsActions';
 import * as serverInfo from '../../serverInfo';
 import '../../css/Results.css';

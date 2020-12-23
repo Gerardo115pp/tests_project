@@ -58,6 +58,11 @@ def loginUsers():
     if request.method == 'POST':
         return user_data_getter.login(request.form['user_name'], request.form['password'], request.environ.get('HTTP_X_REAL_IP', request.remote_addr))
 
+@app.route('/get-user-tokens', methods=['POST'])
+def getUserTokens():
+    # excpects user parameter to be the id of a user
+    return user_data_getter.getTokensInfo(request.form['user'])
+
 @app.route('/getTestTokenInfo/<test_token>/')
 def getTestTokenInfo(test_token):
     if uuids_regex.match(test_token):

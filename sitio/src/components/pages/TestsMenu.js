@@ -2,6 +2,8 @@ import React,{Component} from 'react';
 import {connect} from 'react-redux';
 import SettingsNavModal from '../settingsNavModal';
 import CreateNewProfile from '../CreateNewProfile';
+import TestTokenData from '../TestTokensData';
+import CreateNewTest from '../CreateNewTest';
 import UTModal from '../unfinishedTests';
 import historial from '../historial';
 import * as intervieweeActions from '../../actions/intervieweeActions';
@@ -16,6 +18,7 @@ class TestMenu extends Component
     showing_uts = false;
     unfinished_tests = []; // the ut info is stored here
     selected_profile_id = null;
+    tokens_refresh_callback = null;
 
     state = {
         list_needed_tests: [],
@@ -224,8 +227,10 @@ class TestMenu extends Component
 
         return(
             <React.Fragment>
+                <CreateNewTest/>
                 <CreateNewProfile callback={this.requestUserProfiles} />
-                <SettingsNavModal intervieweeCreator={this.proceedToTests}/>
+                <SettingsNavModal tokensRefreshCallback={this.tokens_refresh_callback} intervieweeCreator={this.proceedToTests}/>
+                <TestTokenData refresh={callback => this.tokens_refresh_callback = callback}/>
                 <UTModal hiddingCallback={this.showUtsModal} uts={this.unfinished_tests} callback={this.resumeUT} />
                 {/* <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} /> */}
                 <div id='main-container'>

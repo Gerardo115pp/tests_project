@@ -12,11 +12,13 @@ class DatagetterException(Exception):
 class UsersDataGetter:
     def __init__(self):
         self.logger = DataLogger()
+        self.query_master = QuerysTestsMaster()
         if not os.path.exists('users'):
             os.mkdir("users")
         if os.path.exists('mysql/mysql_credential.json'):
             with open('mysql/mysql_credential.json','r') as f:
                 self.credentials = json.load(f)
+                
         else:
             raise DatagetterException("mysql\\mysql_credential.json is missing, keep in mind that the folder must be in the same directory as Datagetter.py")  
         self.tests_locations = getTestLocations()
@@ -57,10 +59,7 @@ class UsersDataGetter:
             return self.getBadResponse()
         finally:
             mysql['conn'].close()
-            
-        
-            
-            
+                
     def addTestToDictyonary(self, fullname, shortname):
         with open("./operational_data/testDictyonary.json", 'r') as f:
             dictionary = json.load(f)
@@ -188,7 +187,44 @@ class UsersDataGetter:
             "response":"bad",
             "msg":msg
         }
-    
+
+    def getTokensInfo(self, creator): #the creator is the id of the user that created the token
+        """
+            this is used to retrive infromation about all the tokens that a user created
+            
+            spected response: {
+                'token_0':{
+                    id: [interview id],
+                    created: [date of the creation],
+                    was_finished: [a boolean value specifying if the test is completed],
+                    interviewee: [the name of the interviewee],
+                    interviewee_key: [interviewee_id],
+                    profile: [the name of the profile assinged to the interview]
+                }
+                .
+                .
+                token_n...
+            }
+        """
+        if not re.match(r"\d+", creator):
+            self.logger.log(f"user id that requested the tokens info is not valid! '{creator}'", is_error=True)
+            return self.getBadResponse()
+        self.logger.log(f"Getting Tokens created by user '{creator}'...")
+        mysql = self.__getConnAndCursor()
+        try:
+            mysql['cursor'].execute(self.query_master.getTokensDataQuery(creator))
+            results = mysql['cursor'].fetchall()
+            response = {}
+            for h in range(len(results)):
+                results[h]['created'] = results[h]['created'].strftime("%d/%m/%Y (%H:%M %p)")
+                response[f"token_{h}"] = results[h]
+            return response
+        except Exception as e:
+            self.logger.log(f"An error occurred while getting tokens: {e}", is_error=True)
+            raise e
+        finally:
+            mysql['conn'].close()
+
     def getTestTokenInfo(self, test_token, user_id):
         #the test_token == interview_id
         self.logger.log(f"Getting test_token info({test_token})...")
@@ -720,5 +756,15 @@ class DataLogger:
             f.write(self.__stacked_logs)
         self.stackLog = ""
         
-        
+class QuerysTestsMaster:
+    
+    def getTokensDataQuery(self, user):
+        """
+            this query return the next data: interviews.id, interviews.created, interviews.was_finished
+            interviewees.name as interviewee, profiles.name as profile.
+            
+            it will only return the data that is realted to the interviews create by the 'user' parameter.
+            
+        """
+        return f"SELECT interviews.id, interviews.created, interviews.was_finished, interviewees.name as `interviewee`, interviewees.id as interviewee_key, profiles.name as `profile` FROM interviews, interviewees, profiles WHERE interviews.tokenized=1 AND interviews.created_by={user} AND interviews.applyed_to=interviewees.id AND interviews.profile=profiles.id ORDER BY interviews.created;"  
         

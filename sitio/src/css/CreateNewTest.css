@@ -1,0 +1,285 @@
+/*
+ 
+    ____                _       _   _               _____         _   
+   / ___|_ __ ___  __ _| |_ ___| \ | | _____      _|_   _|__  ___| |_ 
+  | |   | '__/ _ \/ _` | __/ _ \  \| |/ _ \ \ /\ / / | |/ _ \/ __| __|
+  | |___| | |  __/ (_| | ||  __/ |\  |  __/\ V  V /  | |  __/\__ \ |_ 
+   \____|_|  \___|\__,_|\__\___|_| \_|\___| \_/\_/   |_|\___||___/\__|
+                                                                      
+ 
+*/
+
+@import url("./colors.css");
+
+
+/*=============================================
+=            main containers            =
+=============================================*/
+
+#new-test-background {
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.1);
+    position: fixed;
+}
+
+
+
+/*=============================================
+=            modal            =
+=============================================*/
+
+
+#new-test-container{
+    font-family: 'Blinker';
+    width: 60%;
+    height: 100vh;
+    background-color: white;
+    margin: 0 auto;
+    padding: 0.2% 0;
+    border-right:1px solid var(--cyan);
+    border-left:1px solid var(--cyan);
+}
+
+
+/*----------  title  ----------*/
+
+
+#cnt-title{
+    width: 20%;
+    width: fit-content;
+    font-weight: lighter;
+    margin: 0 auto;
+    user-select: none;
+}
+
+
+/*=============================================
+=            new test input            =
+=============================================*/
+
+.cnt-input h4{
+    font-family: 'Roboto Condensed';
+    color: var(--grey);
+    font-weight: lighter;
+    margin: 0 -0.5%;
+}
+
+
+.cnt-input input{
+    font-family: "Roboto Condensed";
+    width: 100%;
+    background: var(--light-grey);
+    color: var(--cyan-clicked);
+    font-size: 1.8rem;
+    border: 1px solid var(--cyan);
+    border-radius: 5px;
+    margin: 1% 0 0;
+}
+
+.cnt-input input::placeholder{
+
+    color: rgba(0, 0, 0, 0.3);  
+}
+
+#test-name-input{
+    width: 70%;
+    margin: 3% auto;
+}
+
+
+/*=============================================
+=            middle options            =
+=============================================*/
+
+#cnt-middle-options {
+    display: flex;
+    width: 80%;
+    margin: 0 auto;
+    justify-content: space-between;
+}
+
+
+
+
+/*=============================================
+=            Measured values            =
+=============================================*/
+
+#cnt-measured-values-container {
+    width: 8vw;
+    background-color: var(--light-grey);
+    font-size: 0.9rem;
+    height: 12vh;
+    border-radius: 5px;
+    border: 1px solid black;
+}
+
+#cnt-mv-values {
+    max-height: 73%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.measured-value-container input {
+    font-family: Blinker;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--dark-grey);
+    padding: .5%;
+    text-align: center;
+}
+
+#measured-values-adder-btn {
+    border-radius: 5px;
+}
+
+
+/*----------  values adder  ----------*/
+
+.adder-btn {
+    width: 100%;
+    background: var(--cyan);
+    text-align: center;
+    color: white;
+    border-radius: 0 0 10px 10px;
+    border: none;
+    padding-bottom: 3%;
+}
+
+
+.adder-btn input {
+    width: 2em;
+    background: none;
+    color: white;
+    border: none;
+    border-bottom: 2px solid var(--sub-section);
+    text-align: center;
+}
+
+
+/*=============================================
+=            middle linear test data            =
+=============================================*/
+
+#cnt-middle-linear-test-data{
+    display: flex;
+    width: 60%;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+
+/*----------  awnser  ----------*/
+
+#awnsers-p-question-input {
+    margin-right: 4rem;
+}
+
+#awnsers-p-question-input input {
+    font-size: 1.3rem;
+    width: 2em;
+}
+
+
+/*----------  test short name  ----------*/
+
+#test-shortname-input {
+    width: 60%;
+}
+
+#test-shortname-input input{
+    width: 60%;
+    font-size: 1.3rem;
+}
+
+
+
+
+/*=============================================
+=            questions container            =
+=============================================*/
+
+#cnt-questions-container{
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 80%;
+    background: var(--light-grey);
+    height: 50vh;
+    border-radius: 5px;
+    border: 1px solid var(--cyan-clicked);
+    margin: 5% auto;
+
+}
+
+#question-adder-btn {
+    outline: none;
+    padding: 1%;
+}
+
+#question-adder-btn input {
+    font-size: 2em;
+}
+
+/*----------  Question editor  ----------*/
+
+.question-editor-container {
+    background-color: white;
+    padding: 2%;
+    border-bottom: 1px solid var(--dark-grey);
+}
+
+.question-editor-container:last {
+    border: none;
+}
+
+.qe-title input{
+    font-size: 1rem;
+    margin-bottom: 1em;
+    width: 100%;
+}
+
+.ftr-qe-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.qe-possible-awnsers-contianer {
+    overflow-y: auto;
+    width: 18vw;
+    height: 4em;
+    border: 1px solid var(--dark-grey);
+    border-radius: 5px;
+}
+
+.possible-awnser-container {
+    display: flex;
+    border-bottom: 1px solid var(--light-grey);
+}
+
+.possible-awnser-container :last-of-type {
+    margin-bottom: .5em;
+}
+
+.possible-awnser-container input{
+    font-family: Blinker;
+    background: none;
+    padding: none;
+    border: none;
+    outline: none;
+}
+
+.possible-awnser-container .awnser-value {
+    width: 2em;
+}
+
+.possible-awnser-container p{
+    margin: 0 1em;
+}
+
+.qe-stat-measuerd {
+    width: 5vw;
+    height: 1.5rem;
+}

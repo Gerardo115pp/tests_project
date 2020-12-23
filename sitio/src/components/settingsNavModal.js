@@ -48,6 +48,10 @@ function SettingsNavModal(props)
         document.execCommand('copy');
     }
 
+    const showTokensInfoModal = () => {
+        props.tokensRefreshCallback();
+    }
+
     return(
         <React.Fragment>
             <div onClick={handleUserClickBackground} id="settings-nav-background">
@@ -64,6 +68,9 @@ function SettingsNavModal(props)
                         </div>
                         <div onClick={e => props.intervieweeCreator(e,true, handleTokenCreation)} className="settings-nav-option">
                             <h5>Crear Test-Token</h5>
+                        </div>
+                        <div onClick={showTokensInfoModal} className="settings-nav-option">
+                            <h5>Tokens creados</h5>
                         </div>
                         <div onClick={() => historial.push('/results')} className="settings-nav-option">
                             <h5>Ir a resultados</h5>

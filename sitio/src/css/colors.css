@@ -1,4 +1,8 @@
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+
 :root{
+    --darker-white: rgba(241, 241, 241, 0.2);
     --light-grey: rgb(241, 241, 241);
     --grey: rgb(130,130,130);
     --dark-grey: rgb(44, 44, 44);
@@ -10,6 +14,16 @@
     --danger: rgb(226, 69, 69);
     --clicked-danger: rgb(161, 51, 51);
     --aprove-green: rgb(111, 238, 111);
+}
+
+input {
+  outline: none;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
 }
 
 
