@@ -58,6 +58,7 @@
 =            new test input            =
 =============================================*/
 
+
 .cnt-input h4{
     font-family: 'Roboto Condensed';
     color: var(--grey);
@@ -76,6 +77,18 @@
     border-radius: 5px;
     margin: 1% 0 0;
 }
+
+.cnt-input.cnt-error input{
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.cnt-input.cnt-error .cnt-input-warning {
+    display: block;
+    font-size: .7em;
+    color: var(--danger);
+}
+
 
 .cnt-input input::placeholder{
 
@@ -192,7 +205,10 @@
 #test-shortname-input input{
     width: 60%;
     font-size: 1.3rem;
+    text-transform: uppercase;
 }
+
+
 
 
 

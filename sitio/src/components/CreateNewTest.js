@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import "../css/CreateNewTest.css";
+import { golang_name } from '../serverInfo';
 
 
 
@@ -11,10 +12,31 @@ const zeros = n => {
 
 class NewTestCreator extends Component 
 {
-    state = {
-        questions: {},
-        measures: [],
-        awnsers: []
+    constructor(props) {
+        super(props);
+        this.save_state_routine = undefined;
+        this.current_state_changes = 0;
+        this.last_state_change = 0;
+        this.state = {
+            questions: {},
+            measures: [],
+            awnsers: [],
+            short_name: "",
+            test_name: "",
+            short_name_exists: false,
+            test_name_exists: false
+        }
+    }
+
+    componentDidMount() {
+        if(this.save_state_routine !== undefined) {
+            window.clearInterval(this.save_state_routine);
+        }
+        this.save_state_routine = window.setInterval(this.saveState, 60000);
+    }
+
+    componentDidUpdate() {
+        this.current_state_changes++;
     }
 
     addQuestion = () => {
@@ -74,6 +96,37 @@ class NewTestCreator extends Component
                 questions,
                 awnsers
             });
+        }
+    }
+
+    getNewTestData = () => {
+        const { test_name, short_name, awnsers, measures, questions } = this.state;
+        return {
+            test_name,
+            short_name,
+            awnsers,
+            measures,
+            questions
+        }
+    }
+
+    isStateEmpty = () => {
+        const { awnsers, measures, questions, short_name, test_name } = this.state;
+        return awnsers.length > 0 && measures.length > 0 && Object.keys(questions) > 0 && short_name !== "" && test_name !== "";
+    }
+
+
+    saveState = () => {
+        if(!this.isStateEmpty() && this.current_state_changes > this.last_state_change) {
+            this.last_state_change = this.current_state_changes;
+            const test_state = JSON.stringify(this.getNewTestData());
+            
+            const forma = new FormData();
+            forma.append("test_state", test_state);
+            forma.append("test_name", this.state.test_name);
+
+            const request = new Request(`${golang_name}/save-state`, {body: forma, method: "POST"});
+            fetch(request);
         }
     }
 
@@ -152,6 +205,37 @@ class NewTestCreator extends Component
         }
     }
 
+    verifyShortName = () => {
+        const short_name = document.querySelector("#test-shortname-input input").value;
+        if(short_name !== "") {
+            fetch(`${golang_name}/does-shortname-exists?field_value=${short_name}`)
+                .then(promise => promise.json())
+                .then(response => {
+                    this.setState({
+                        ...this.state,
+                        short_name_exists: response.response,
+                        short_name
+
+                    })
+                })
+        }
+    }
+
+    verifyTestName = () => {
+        const full_name = document.querySelector("#test-name-input input").value;
+        if(full_name !== "") {
+            fetch(`${golang_name}/does-testname-exists?field_value=${full_name}`)
+                .then(promise => promise.json())
+                .then(response => {
+                    this.setState({
+                        ...this.state,
+                        test_name_exists: response.response,
+                        test_name: full_name
+                    })
+                })
+        }
+    }
+
     questionUpdate = (quuid, question_new_data) => {
         const { questions } = this.state;
         questions[quuid] = question_new_data;
@@ -169,7 +253,7 @@ class NewTestCreator extends Component
             <div id="new-test-background">
                 <div id="new-test-container">
                     <h1 id="cnt-title">Test Creator</h1>
-                    <CNTinput uuid="test-name-input" label_name="Nombre de la prueba" placeholder="new test name..."/>
+                    <CNTinput on_blur={this.verifyTestName} on_keydown={e => this.triggerIfEnter(e, this.verifyTestName)} has_errors={this.state.test_name_exists} warning_msg="this name is not avaliable" uuid="test-name-input" label_name="Nombre de la prueba" placeholder="new test name..."/>
                     <div id="cnt-middle-options">
                         <div id="cnt-measured-values-container">
                             <div id="cnt-mv-values">
@@ -181,7 +265,7 @@ class NewTestCreator extends Component
                         </div>
                         <div id="cnt-middle-linear-test-data">
                             <CNTinput on_keydown={e => this.triggerIfEnter(e, this.addAwnser)} on_blur={this.addAwnser} uuid="awnsers-p-question-input" label_name="N.respuestas" default_value={0} minimal_value={0} type="number"/>
-                            <CNTinput uuid="test-shortname-input" label_name="shortname" placeholder="CNT.. or something"/>
+                            <CNTinput on_blur={this.verifyShortName} on_keydown={e => this.triggerIfEnter(e, this.verifyShortName)} has_errors={this.state.short_name_exists} uuid="test-shortname-input" label_name="shortname" warning_msg="short name in use" placeholder="CNT.. or something"/>
                         </div>
                     </div>
                     <div id="cnt-questions-container">
@@ -272,10 +356,14 @@ const CNTinput = props => {
         on_blur,
         on_keydown,
         default_value,
-        minimal_value
+        minimal_value,
+        has_errors,
+        warning_msg
     } = props;
     
+    const show_warning = has_errors === undefined ? false : has_errors;
     let class_name = props.cls !== undefined ? props.cls : "";
+    class_name += show_warning ? " cnt-error" : ""
 
     return(
         <div id={uuid} className={`cnt-input ${class_name}`}>
@@ -289,6 +377,7 @@ const CNTinput = props => {
                 placeholder={placeholder !== undefined ? placeholder : ""} 
                 defaultValue={default_value}
                 min={minimal_value}/>
+            <span className="cnt-input-warning">{show_warning ? warning_msg : " "}</span>
         </div>
     )
 }
