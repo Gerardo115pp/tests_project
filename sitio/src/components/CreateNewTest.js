@@ -125,7 +125,7 @@ class NewTestCreator extends Component
             forma.append("test_state", test_state);
             forma.append("test_name", this.state.test_name);
 
-            const request = new Request(`${golang_name}/save-state`, {body: forma, method: "POST"});
+            const request = new Request(`${golang_name}/save-test-check-point`, {body: forma, method: "POST"});
             fetch(request);
         }
     }
@@ -160,11 +160,40 @@ class NewTestCreator extends Component
 
     getMeausredValues = () => this.state.measures;
 
-    triggerIfEnter = (e, callback) => {
+    triggerIfEnter = (e, callback, do_callback=true) => {
         if(e.key === "Enter") {
-            callback(e);
+            if (do_callback) {
+                callback(e);
+            }
             e.target.blur();
         }
+    }
+
+    loadTestCheckPoint = test_name => {
+        const forma = new FormData();
+        forma.append("test_name", test_name);
+        const request = new Request(`${golang_name}/load-test-check-point`, {method: "POST", body: forma});
+        fetch(request)
+            .then(promise => {
+                if (promise.status === 200) {
+                    return promise.json();
+                }
+                return null;
+            })
+            .then(response => {
+                console.log(response)
+                if (response !== null) {
+                    console.log("not null")
+                    this.setState({
+                        ...this.state,
+                        awnsers: response.awnsers,
+                        measures: response.measures,
+                        questions: response.questions,
+                        test_name: response.test_name,
+                        short_name: response.short_name
+                    })
+                }
+            })
     }
 
     updateMeasuredValues = e => {
@@ -227,11 +256,14 @@ class NewTestCreator extends Component
             fetch(`${golang_name}/does-testname-exists?field_value=${full_name}`)
                 .then(promise => promise.json())
                 .then(response => {
+
+                    const callback = response.response ? () => {} : this.loadTestCheckPoint(full_name);
+
                     this.setState({
                         ...this.state,
                         test_name_exists: response.response,
                         test_name: full_name
-                    })
+                    }, callback);
                 })
         }
     }
@@ -253,7 +285,7 @@ class NewTestCreator extends Component
             <div id="new-test-background">
                 <div id="new-test-container">
                     <h1 id="cnt-title">Test Creator</h1>
-                    <CNTinput on_blur={this.verifyTestName} on_keydown={e => this.triggerIfEnter(e, this.verifyTestName)} has_errors={this.state.test_name_exists} warning_msg="this name is not avaliable" uuid="test-name-input" label_name="Nombre de la prueba" placeholder="new test name..."/>
+                    <CNTinput on_blur={this.verifyTestName} on_keydown={e => this.triggerIfEnter(e, this.verifyTestName, false)} has_errors={this.state.test_name_exists} warning_msg="this name is not avaliable" uuid="test-name-input" label_name="Nombre de la prueba" placeholder="new test name..."/>
                     <div id="cnt-middle-options">
                         <div id="cnt-measured-values-container">
                             <div id="cnt-mv-values">
@@ -265,7 +297,7 @@ class NewTestCreator extends Component
                         </div>
                         <div id="cnt-middle-linear-test-data">
                             <CNTinput on_keydown={e => this.triggerIfEnter(e, this.addAwnser)} on_blur={this.addAwnser} uuid="awnsers-p-question-input" label_name="N.respuestas" default_value={0} minimal_value={0} type="number"/>
-                            <CNTinput on_blur={this.verifyShortName} on_keydown={e => this.triggerIfEnter(e, this.verifyShortName)} has_errors={this.state.short_name_exists} uuid="test-shortname-input" label_name="shortname" warning_msg="short name in use" placeholder="CNT.. or something"/>
+                            <CNTinput on_blur={this.verifyShortName} on_keydown={e => this.triggerIfEnter(e, this.verifyShortName)} has_errors={this.state.short_name_exists} uuid="test-shortname-input" label_name="shortname" warning_msg="short name in use" placeholder="CNT.. or something" default_value={this.state.short_name}/>
                         </div>
                     </div>
                     <div id="cnt-questions-container">

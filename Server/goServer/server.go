@@ -33,7 +33,7 @@ func (self *Server) init(port int) {
 	panicIfErr(err)
 	self.db_conn = new_connection
 	self.generic_ok_response = self.createResponse("\"ok\"")
-	self.generic_error_response = self.createResponse("\"ok\"")
+	self.generic_error_response = self.createResponse("\"error\"")
 }
 
 func (self *Server) createResponse(msg string) (response []byte) {
@@ -56,8 +56,29 @@ func (self *Server) enableCors(handler func(http.ResponseWriter, *http.Request))
 	}
 }
 
+func (self *Server) pathExists(path_name string) bool {
+	_, err := os.Stat(path_name)
+	return !(os.IsNotExist(err))
+
+}
+
 func (self *Server) getPortString() string {
 	return fmt.Sprintf(":%d", self.port)
+}
+
+func (self *Server) serveStateProgress(response http.ResponseWriter, request *http.Request) {
+	var test_state_file string = fmt.Sprintf("%s/%s.json", SERVER_STATE_DIRECTORY, request.FormValue("test_name"))
+	fmt.Printf("Serving state of unfinished test '%s'\n", test_state_file)
+	if self.pathExists(test_state_file) {
+		file_bytes, err := ioutil.ReadFile(test_state_file)
+		panicIfErr(err)
+		response.Header().Set("Content-Type", "application/json")
+		_, _ = response.Write(file_bytes)
+		return
+	}
+	fmt.Println("Error: test file doesnt exists")
+	response.WriteHeader(http.StatusBadRequest)
+	_, _ = response.Write(self.generic_error_response)
 }
 
 func (self *Server) saveState(response http.ResponseWriter, request *http.Request) {
@@ -121,7 +142,8 @@ func (self *Server) serve() {
 
 	http.HandleFunc("/does-shortname-exists", self.enableCors(self.validateTestField(self.shortNameExists, "short_name")))
 	http.HandleFunc("/does-testname-exists", self.enableCors(self.validateTestField(self.shortNameExists, "full_name")))
-	http.HandleFunc("/save-state", self.enableCors(self.saveState))
+	http.HandleFunc("/save-test-check-point", self.enableCors(self.saveState))
+	http.HandleFunc("/load-test-check-point", self.enableCors(self.serveStateProgress))
 
 	fmt.Printf("Server lisiting on '127.0.0.1:%d'\n", self.port)
 
