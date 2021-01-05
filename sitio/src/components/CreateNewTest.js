@@ -15,6 +15,7 @@ class NewTestCreator extends Component
     constructor(props) {
         super(props);
         this.save_state_routine = undefined;
+        this.test_completness_verifier = undefined;
         this.current_state_changes = 0;
         this.last_state_change = 0;
         this.state = {
@@ -24,7 +25,8 @@ class NewTestCreator extends Component
             short_name: "",
             test_name: "",
             short_name_exists: false,
-            test_name_exists: false
+            test_name_exists: false,
+            is_test_complete: false
         }
     }
 
@@ -37,6 +39,10 @@ class NewTestCreator extends Component
 
     componentDidUpdate() {
         this.current_state_changes++;
+    }
+
+    componentWillUnmount() {
+        window.clearInterval(this.save_state_routine);
     }
 
     addQuestion = () => {
@@ -115,6 +121,62 @@ class NewTestCreator extends Component
         return awnsers.length > 0 && measures.length > 0 && Object.keys(questions) > 0 && short_name !== "" && test_name !== "";
     }
 
+    isTestComplete = () => {
+        const {
+            awnsers,
+            questions,
+            measures,
+            test_name,
+            short_name
+        } = this.state;
+        let is_complete = true;
+        if (short_name === "") {
+            is_complete = false;
+        } else if (test_name === "") {
+            is_complete = false;
+        }
+
+        if (measures.length === 0 ) {
+            is_complete = false;
+        } else if (is_complete) {
+            for(let m of measures) {
+                if (m === undefined) {
+                    is_complete = false;
+                    break;
+                }
+            }
+        } 
+
+        if(awnsers.length === 0) {
+            is_complete = false;
+        } else if(is_complete) {
+            for(let a of awnsers) {
+                if (a === undefined) {
+                    is_complete = false;
+                    break;
+                }
+            }
+        }
+
+        if (Object.keys(questions).length === 0) {
+            is_complete = false;
+        } else if(is_complete) {
+            for(let q of Object.keys(questions)) {
+                if(questions[q].title === undefined){
+                    is_complete = false;
+                    break;
+                }
+            }
+        }
+
+        console.log(`is test complete: ${is_complete}`);
+        if(this.state.is_test_complete !== is_complete) {
+            this.setState({
+                ...this.state,
+                is_test_complete: is_complete
+            });
+        }
+    }
 
     saveState = () => {
         if(!this.isStateEmpty() && this.current_state_changes > this.last_state_change) {
@@ -191,7 +253,10 @@ class NewTestCreator extends Component
                         questions: response.questions,
                         test_name: response.test_name,
                         short_name: response.short_name
-                    })
+                    }, () => {
+                        this.updateInputsToCheckPoint(response);
+                        this.isTestComplete();
+                    });
                 }
             })
     }
@@ -207,7 +272,7 @@ class NewTestCreator extends Component
             this.setState({
                 ...this.state,
                 measures
-            });
+            }, this.isTestComplete);
         }
     }
 
@@ -230,8 +295,17 @@ class NewTestCreator extends Component
             this.setState({
                 ...this.state,
                 awnsers
-            });
+            }, this.isTestComplete);
         }
+    }
+
+    updateInputsToCheckPoint = checkpoint => {
+        const awnsers_count_input = document.querySelector("#awnsers-p-question-input input");
+        const questions_count_input = document.querySelector("#question-adder-btn input");
+        const measures_count_input = document.querySelector("#measured-values-adder-btn input");
+        awnsers_count_input.value = checkpoint.awnsers.length;
+        questions_count_input.value = Object.keys(checkpoint.questions).length;
+        measures_count_input.value = checkpoint.measures.length;
     }
 
     verifyShortName = () => {
@@ -244,8 +318,7 @@ class NewTestCreator extends Component
                         ...this.state,
                         short_name_exists: response.response,
                         short_name
-
-                    })
+                    }, this.isTestComplete)
                 })
         }
     }
@@ -279,12 +352,13 @@ class NewTestCreator extends Component
 
     render() 
     {
-        const { questions } = this.state;
+        const { questions, is_test_complete } = this.state,
+        test_title_color = is_test_complete ? "#3fff00" : "black";
 
         return(
             <div id="new-test-background">
                 <div id="new-test-container">
-                    <h1 id="cnt-title">Test Creator</h1>
+                    <h1 style={{color: test_title_color}} id="cnt-title">Test Creator</h1>
                     <CNTinput on_blur={this.verifyTestName} on_keydown={e => this.triggerIfEnter(e, this.verifyTestName, false)} has_errors={this.state.test_name_exists} warning_msg="this name is not avaliable" uuid="test-name-input" label_name="Nombre de la prueba" placeholder="new test name..."/>
                     <div id="cnt-middle-options">
                         <div id="cnt-measured-values-container">
@@ -340,12 +414,12 @@ const QuestionEditorComponent = props => {
     const getAwnsersView = () => {
         if (possible_awnsers.length > 0) {
             return possible_awnsers.map((itm, h) => {
-
+                const awnser_current_value = h < data.awnsers_values.length ? data.awnsers_values[h] : 0;
                 return (
                     <div key={`qe-awnser-${h}`} className="possible-awnser-container">
                         <input onKeyDown={e => updateAnwserOnEnter(e, h, updateAwnserCallback)} onBlur={e => updateAwnserCallback(h, e.target.value)} type="text" className="awnser-title" placeholder="empty anwser" defaultValue={itm !== undefined ? itm : ""}/>
                         <p>:</p>
-                        <input onBlur={e => updateAwnserValueCallback(uuid, h, e.target.value)} type="number" defaultValue={0} className="awnser-value"/>
+                        <input onBlur={e => updateAwnserValueCallback(uuid, h, e.target.value)} type="number" defaultValue={awnser_current_value} className="awnser-value"/>
                     </div>
                 );
             })
@@ -356,7 +430,7 @@ const QuestionEditorComponent = props => {
 
     return(
         <div id={`question-editor-${uuid}`}  className="question-editor-container">
-            <CNTinput on_blur={updateQuestionData} label_name={`pregunta ${uuid+1}`} uuid={null} placeholder="titulo de la pregunta..." cls="qe-title"/>
+            <CNTinput default_value={data.title} on_blur={updateQuestionData} label_name={`pregunta ${uuid+1}`} uuid={null} placeholder="titulo de la pregunta..." cls="qe-title"/>
             <div className="ftr-qe-container">
                 <div className="qe-possible-awnsers-contianer">
                     {getAwnsersView()}
