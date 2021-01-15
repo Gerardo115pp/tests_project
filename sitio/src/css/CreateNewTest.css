@@ -17,6 +17,8 @@
 =============================================*/
 
 #new-test-background {
+    cursor: pointer;
+    display: none;
     width: 100vw;
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.1);
@@ -32,6 +34,7 @@
 
 #new-test-container{
     font-family: 'Blinker';
+    cursor: default;
     width: 60%;
     height: 100vh;
     background-color: white;
@@ -222,7 +225,7 @@
     overflow-x: hidden;
     width: 80%;
     background: var(--light-grey);
-    height: 50vh;
+    height: 45vh;
     border-radius: 5px;
     border: 1px solid var(--cyan-clicked);
     margin: 5% auto;
@@ -299,3 +302,18 @@
     width: 5vw;
     height: 1.5rem;
 }
+
+
+/*=============================================
+=            controls            =
+=============================================*/
+
+#cnt-questions-control-footer {
+    display: flex;
+    justify-content: space-around;
+}
+
+
+
+
+

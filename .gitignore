@@ -37,7 +37,7 @@ Server/__pycache__/*
 Server/manual_backups/
 Server/data_logs/
 Docs
-
+/**/logs/
 
 DB_LocalBackups/
 /**/new_test_checkpoints

@@ -37,6 +37,11 @@ function SettingsNavModal(props)
         }
     }
 
+    const hideSelf = () => {
+        const self = document.getElementById("settings-nav-background");
+        self.style.display = "none";
+    }
+
     const showCreateNewProfileForm = () => {
         const element = document.getElementById('newprofile-modal-background');
         element.style.display = 'block';
@@ -68,6 +73,14 @@ function SettingsNavModal(props)
                         </div>
                         <div onClick={e => props.intervieweeCreator(e,true, handleTokenCreation)} className="settings-nav-option">
                             <h5>Crear Test-Token</h5>
+                        </div>
+                        <div onClick={e => {
+                                hideSelf();
+                                props.showCreateTestUI();
+                                }
+                            }
+                            className="settings-nav-option">
+                            <h5>Crear Escala</h5>
                         </div>
                         <div onClick={showTokensInfoModal} className="settings-nav-option">
                             <h5>Tokens creados</h5>

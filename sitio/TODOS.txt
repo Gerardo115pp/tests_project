@@ -1,6 +1,4 @@
-[M][3] hacer que el programa le de la opcion al usuario de que continue con el un test que dejo a meidas
+FIXME: CNT rountines most stop whenever the visibility of the element is set to none
 
-[S][2] hacer que el programa no pierda los resultados del test en progreso cuando se recarga la pagina
+TODO: the react client most send debug data to the golang server which should save it in a separated file from its own logs, this probably should be done through a websocket.
 
-[S][1] añadir en el side bar de resultados, un boton que permita al usuario aplicar un o varios tests extras
-a un paciente

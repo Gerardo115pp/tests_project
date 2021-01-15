@@ -70,7 +70,7 @@ class Test{
                     <span>{this.general}:</span>
                     <br/>
                     <br/>
-                    <span>> {title}</span>
+                    <span>{title}</span>
                 </React.Fragment>
             );
         }

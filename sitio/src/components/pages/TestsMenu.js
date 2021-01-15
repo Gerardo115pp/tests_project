@@ -1,5 +1,8 @@
+
 import React,{Component} from 'react';
 import {connect} from 'react-redux';
+import appState from '../../classes/SingletonStateManager';
+import { VisibilityEvents } from '../../enums/AppStateEvents';
 import SettingsNavModal from '../settingsNavModal';
 import CreateNewProfile from '../CreateNewProfile';
 import TestTokenData from '../TestTokensData';
@@ -15,16 +18,21 @@ import '../../css/TestMenu.css';
 class TestMenu extends Component
 {
 
-    showing_uts = false;
-    unfinished_tests = []; // the ut info is stored here
-    selected_profile_id = null;
-    tokens_refresh_callback = null;
+    constructor(props) {
+        super(props);
+        this.showing_uts = false;
+        this.unfinished_tests = []; // the ut info is stored here
+        this.selected_profile_id = null;
+        this.tokens_refresh_callback = null;
+    
+        this.registerEvents();
 
-    state = {
-        list_needed_tests: [],
-        needed_tests: {},
-        unfinished_tests: false, //true only if the server says that there are ut(unfinished tests) created by the current user
-        profiles: [] // this is a list that will contain the profiles that will be displayed gotten by 'getUserProfilesAsJSX'
+        this.state = {
+            list_needed_tests: [],
+            needed_tests: {},
+            unfinished_tests: false, //true only if the server says that there are ut(unfinished tests) created by the current user
+            profiles: [] // this is a list that will contain the profiles that will be displayed gotten by 'getUserProfilesAsJSX'
+        }
     }
 
 
@@ -69,6 +77,8 @@ class TestMenu extends Component
          * (this.unfinished !== this.state.unfinished) is set to true, so the components get loaded in the render().
          * 
          * we call for the profiles the user has created.
+         * 
+         * we register the corresponding events on the appState
          */
 
         const { unfinished_tests } = this.state;
@@ -96,6 +106,7 @@ class TestMenu extends Component
         {
             this.requestUserProfiles();
         } 
+
     }
 
     backArrowHandler = e => {
@@ -172,6 +183,8 @@ class TestMenu extends Component
         }
     }
 
+    showCreateNewTestUI = () => appState.triggerEvent(VisibilityEvents.TOGGLE_CNT_UI)
+
     showUtsModal = () => {
         /**
          * show the ut modal if there are more the one ut if there is only one then it directly resumes that ut
@@ -214,6 +227,12 @@ class TestMenu extends Component
         }
     }
 
+    registerEvents = () => {
+        if (!appState.isEventRegistred(VisibilityEvents.TOGGLE_CNT_UI)) {
+            appState.registerEvent(VisibilityEvents.TOGGLE_CNT_UI)
+        }
+    }   
+
     render(){
         let content = "";
         if (this.unfinished_tests.length > 0) // Create th ut botton if there are any uts
@@ -229,7 +248,10 @@ class TestMenu extends Component
             <React.Fragment>
                 <CreateNewTest/>
                 <CreateNewProfile callback={this.requestUserProfiles} />
-                <SettingsNavModal tokensRefreshCallback={this.tokens_refresh_callback} intervieweeCreator={this.proceedToTests}/>
+                <SettingsNavModal 
+                                tokensRefreshCallback={this.tokens_refresh_callback}
+                                intervieweeCreator={this.proceedToTests}
+                                showCreateTestUI={this.showCreateNewTestUI}/>
                 <TestTokenData refresh={callback => this.tokens_refresh_callback = callback}/>
                 <UTModal hiddingCallback={this.showUtsModal} uts={this.unfinished_tests} callback={this.resumeUT} />
                 {/* <ModalTests callback={this.getSelectedTests} use_id={'tests-modal-container'} /> */}

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import "../css/CreateNewTest.css";
 import { golang_name } from '../serverInfo';
-
+import appState from "../classes/SingletonStateManager";
+import { VisibilityEvents } from "../enums/AppStateEvents";
 
 
 const zeros = n => {
@@ -14,10 +15,13 @@ class NewTestCreator extends Component
 {
     constructor(props) {
         super(props);
-        this.save_state_routine = undefined;
-        this.test_completness_verifier = undefined;
+        this.save_state_routine = undefined; //its an interval that saves the state of the test on golang server
         this.current_state_changes = 0;
         this.last_state_change = 0;
+        this.is_visible = false;
+
+        
+        
         this.state = {
             questions: {},
             measures: [],
@@ -29,12 +33,15 @@ class NewTestCreator extends Component
             is_test_complete: false
         }
     }
-
+    
     componentDidMount() {
         if(this.save_state_routine !== undefined) {
             window.clearInterval(this.save_state_routine);
         }
         this.save_state_routine = window.setInterval(this.saveState, 60000);
+        
+        // register visibility callback
+        appState.events[VisibilityEvents.TOGGLE_CNT_UI].registerCallback("cnt", this.toggleVisibility);
     }
 
     componentDidUpdate() {
@@ -43,6 +50,8 @@ class NewTestCreator extends Component
 
     componentWillUnmount() {
         window.clearInterval(this.save_state_routine);
+        appState.events[VisibilityEvents.TOGGLE_CNT_UI].active = false;
+        console.log("CNT just unmounted");
     }
 
     addQuestion = () => {
@@ -54,7 +63,7 @@ class NewTestCreator extends Component
             const awnsers_size = this.state.awnsers.length > 0 ? this.state.awnsers.length : 1;
             do {
                 question_counter++;
-                questions[`q${question_counter}`] = {
+                questions[`p${question_counter}`] = {
                     title: undefined,
                     stat: undefined,
                     awnsers_values: zeros(awnsers_size)
@@ -67,7 +76,7 @@ class NewTestCreator extends Component
                 if (count <= question_counter) {
                     break;
                 }
-                new_questions_set[`q${question_counter}`] = q;
+                new_questions_set[`p${question_counter}`] = q;
                 question_counter++;
             }
             questions = new_questions_set;
@@ -77,7 +86,6 @@ class NewTestCreator extends Component
             questions
         });
     }
-
 
     addMeasure = e => {
         const count = parseInt(e.target.value);
@@ -105,6 +113,37 @@ class NewTestCreator extends Component
         }
     }
 
+    createTest = () => {
+        const { is_test_complete, questions, awnsers, measures, test_name, short_name } = this.state;
+        if (is_test_complete) {
+            const new_test = {
+                questions: {},
+                url: null,
+                answers: awnsers,
+                name: test_name,
+                type: "B1"
+            };
+            Object.keys(questions).forEach(q => {
+                new_test.questions[q] = {
+                    text: questions[q].title,
+                    values: questions[q].awnsers_values,
+                    mide: measures[parseInt(questions[q].stat)]
+                };
+            });
+
+            const forma = new FormData();
+            forma.append("test_data", JSON.stringify(new_test));
+            forma.append("short_name", short_name);
+            forma.append("length", Object.keys(new_test.questions).length);
+            forma.append("measures", JSON.stringify(measures))
+
+            const request = new Request(`${golang_name}/create-new-test`, {body: forma, method: "POST"});
+            fetch(request);
+
+            appState.triggerEvent(VisibilityEvents.TOGGLE_CNT_UI);
+        }
+    }
+
     getNewTestData = () => {
         const { test_name, short_name, awnsers, measures, questions } = this.state;
         return {
@@ -115,6 +154,17 @@ class NewTestCreator extends Component
             questions
         }
     }
+
+    toggleVisibility = () => {
+        console.log("Toggling visibility")
+        const self = document.getElementById("new-test-background"),
+              { is_visible } = this;
+
+        self.style.display = is_visible ? "none" : "block";
+        this.is_visible = !is_visible;
+    }
+
+
 
     isStateEmpty = () => {
         const { awnsers, measures, questions, short_name, test_name } = this.state;
@@ -179,7 +229,7 @@ class NewTestCreator extends Component
     }
 
     saveState = () => {
-        if(!this.isStateEmpty() && this.current_state_changes > this.last_state_change) {
+        if(!this.isStateEmpty() && this.current_state_changes > this.last_state_change && this.is_visible) {
             this.last_state_change = this.current_state_changes;
             const test_state = JSON.stringify(this.getNewTestData());
             
@@ -281,7 +331,7 @@ class NewTestCreator extends Component
         if ((typeof new_value) === "string") {
             new_value = parseInt(new_value);
         }
-        questions[`q${question_uuid + 1}`].awnsers_values[awnser_index] = new_value;
+        questions[`p${question_uuid + 1}`].awnsers_values[awnser_index] = new_value;
         this.setState({
             ...this.state,
             questions
@@ -352,13 +402,16 @@ class NewTestCreator extends Component
 
     render() 
     {
-        const { questions, is_test_complete } = this.state,
-        test_title_color = is_test_complete ? "#3fff00" : "black";
+        const { questions, is_test_complete } = this.state; 
 
         return(
-            <div id="new-test-background">
+            <div id="new-test-background" onClick={e => {
+                    if ( e.target.id === "new-test-background") {
+                        appState.triggerEvent(VisibilityEvents.TOGGLE_CNT_UI);
+                    }
+                }}>
                 <div id="new-test-container">
-                    <h1 style={{color: test_title_color}} id="cnt-title">Test Creator</h1>
+                    <h1 id="cnt-title">Test Creator</h1>
                     <CNTinput on_blur={this.verifyTestName} on_keydown={e => this.triggerIfEnter(e, this.verifyTestName, false)} has_errors={this.state.test_name_exists} warning_msg="this name is not avaliable" uuid="test-name-input" label_name="Nombre de la prueba" placeholder="new test name..."/>
                     <div id="cnt-middle-options">
                         <div id="cnt-measured-values-container">
@@ -381,6 +434,9 @@ class NewTestCreator extends Component
                         <button className="adder-btn" id="question-adder-btn">
                             <input onKeyDown={e => this.triggerIfEnter(e, this.addQuestion)} onBlur={this.addQuestion} type="number" min="0" defaultValue="0"/>
                         </button>
+                    </div>
+                    <div id="cnt-questions-control-footer">
+                        <button onClick={this.createTest} id="create-test-btn" className={`pt-btn ${ is_test_complete ? "" : "disabled-btn" }`}>Crear</button>
                     </div>
                 </div>
             </div>
@@ -435,7 +491,7 @@ const QuestionEditorComponent = props => {
                 <div className="qe-possible-awnsers-contianer">
                     {getAwnsersView()}
                 </div>
-                <select onChange={updateQuestionData} className="qe-stat-measuerd">
+                <select onClick={updateQuestionData} onChange={updateQuestionData} className="qe-stat-measuerd">
                     {measures.map((itm, h) => {
                         if(itm !== "" && itm !== undefined) {
                             return <option key={`${uuid}-measure-${h}`} value={h}>{itm}</option>
