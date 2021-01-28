@@ -153,7 +153,7 @@ class Interviews extends Component {
     nextBtnClickedHandler = operation => {
         /**
          * this handles the navigation between one question and the next one or the previous one,
-         * but it also handles the change between one test and the next one. its also the function that
+         * and it also handles the change between one test and the next one. its also the function that
          * has the responsability to decide when the interview is over and,
          * the data must be sent to de server and so it updates the status of the interview as a finished interview
          */
@@ -176,6 +176,7 @@ class Interviews extends Component {
             }
             else if( question_num === this.test_obj.length )// the test is done
             {
+                this.saveAnswer(question_num);
                 let { test_num, tests } = this.state;
                 if (test_num < (tests.length)-1)// there are more tests remaing
                 {
@@ -227,7 +228,7 @@ class Interviews extends Component {
 
     resetAnswers = () => {
         /*
-            sets the answer components to ther original state both logicly and estheticly
+            sets the answer components to ther original state both logicly and visually
         */
         if( this.state.selected_awnser !== null){
             if(!(/C[12]/g.test(this.test_obj.test_type)))// the answers are regular divs
